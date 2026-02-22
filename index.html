@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis XV Años - Hanna Paulina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #F8F6F4; color: #462F24; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .oculto { display: none; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="max-w-md mx-auto bg-[#F8F6F4] min-h-screen relative shadow-lg overflow-hidden pb-20">
+
+        <div id="pantalla-inicio" class="p-6">
+            <div class="flex justify-center items-center mb-6 pt-4">
+                <h1 class="font-bold tracking-[0.25em] text-3xl text-[#DECFC0]">MIS XV AÑOS</h1>
+            </div>
+
+            <div class="w-full aspect-square bg-white rounded-[40px] mb-6 overflow-hidden shadow-md flex items-center justify-center border border-[#DECFC0]/30">
+                <img src="logo-hanna.jpg" alt="Logo Hanna Paulina" class="w-full h-full object-cover">
+            </div>
+
+            <div class="text-center mb-8 mt-2">
+                <p class="text-base text-[#E4BEB8] font-black tracking-widest mb-3">¡ESTÁS INVITADO!</p>
+                <p class="text-2xl opacity-90 font-bold mb-1">Quinta Los Agapantos</p>
+                <p class="text-lg opacity-80">Jueves 30 de Abril 2026</p>
+            </div>
+
+            <div class="flex justify-center space-x-3 mb-8">
+                <div class="bg-white border border-[#DECFC0]/50 rounded-2xl w-16 h-20 flex flex-col items-center justify-center shadow-sm">
+                    <span id="dias" class="text-2xl font-bold">00</span><span class="text-[9px] font-bold tracking-widest opacity-60 mt-1">DÍAS</span>
+                </div>
+                <div class="bg-white border border-[#DECFC0]/50 rounded-2xl w-16 h-20 flex flex-col items-center justify-center shadow-sm">
+                    <span id="horas" class="text-2xl font-bold">00</span><span class="text-[9px] font-bold tracking-widest opacity-60 mt-1">HORAS</span>
+                </div>
+                <div class="bg-white border border-[#DECFC0]/50 rounded-2xl w-16 h-20 flex flex-col items-center justify-center shadow-sm">
+                    <span id="minutos" class="text-2xl font-bold">00</span><span class="text-[9px] font-bold tracking-widest opacity-60 mt-1">MIN</span>
+                </div>
+                <div class="bg-white border border-[#DECFC0]/50 rounded-2xl w-16 h-20 flex flex-col items-center justify-center shadow-sm">
+                    <span id="segundos" class="text-2xl font-bold">00</span><span class="text-[9px] font-bold tracking-widest opacity-60 mt-1">SEG</span>
+                </div>
+            </div>
+
+            <button onclick="cambiarPantalla('pantalla-rsvp')" class="w-full bg-[#E4BEB8] hover:opacity-90 text-[#462F24] font-bold py-4 rounded-3xl shadow-sm mb-4 flex justify-center items-center transition">
+                Confirmar Asistencia
+            </button>
+        </div>
+
+        <div id="pantalla-rsvp" class="p-6 oculto">
+            <div class="flex items-center mb-8 pt-4">
+                <button onclick="history.back()" class="text-[#DECFC0] hover:text-[#462F24] mr-4 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h1 class="font-semibold text-lg">Confirmación de Asistencia</h1>
+            </div>
+
+            <form id="form-rsvp" class="space-y-6">
+                <input type="hidden" id="estatus" name="estatus" value="Asiste">
+
+                <div>
+                    <label class="block text-xs font-bold tracking-wider mb-2 opacity-80">TU NOMBRE COMPLETO</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Escribe tu nombre aquí" required class="w-full bg-white border-2 border-[#DECFC0] rounded-2xl p-4 focus:outline-none focus:border-[#E4BEB8] transition placeholder:text-[#DECFC0]">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold tracking-wider mb-2 opacity-80">ACOMPAÑANTES EXTRA</label>
+                    <select id="acompanantes" name="acompanantes" onchange="generarCamposAcompanantes('campos-dinamicos', this.value)" class="w-full bg-white border-2 border-[#DECFC0] rounded-2xl p-4 focus:outline-none focus:border-[#E4BEB8] transition">
+                        <option value="0">Ninguno (Solo asisto yo)</option>
+                        <option value="1">1 Acompañante</option>
+                        <option value="2">2 Acompañantes</option>
+                        <option value="3">3 Acompañantes</option>
+                        <option value="4">4 Acompañantes</option>
+                        <option value="5">5 Acompañantes</option>
+                        <option value="6">6 Acompañantes</option>
+                        <option value="7">7 Acompañantes</option>
+                        <option value="8">8 Acompañantes</option>
+                        <option value="9">9 Acompañantes</option>
+                    </select>
+                </div>
+
+                <div id="campos-dinamicos" class="space-y-4"></div>
+
+                <div>
+                    <label class="block text-xs font-bold tracking-wider mb-2 opacity-80">NOTAS ADICIONALES</label>
+                    <textarea id="notas" name="notas" placeholder="Alergias o mensajes..." class="w-full bg-white border-2 border-[#DECFC0] rounded-2xl p-4 h-24 focus:outline-none focus:border-[#E4BEB8] transition placeholder:text-[#DECFC0]"></textarea>
+                </div>
+
+                <div class="flex space-x-3 mt-4">
+                    <button type="button" onclick="enviarFormulario('No Asiste')" id="btn-no-asiste" class="w-[30%] bg-[#D98C8C] hover:bg-[#C97A7A] text-white font-bold py-4 rounded-3xl shadow-sm transition text-sm">
+                        No asisto ✗
+                    </button>
+                    <button type="button" onclick="enviarFormulario('Asiste')" id="btn-asiste" class="w-[70%] bg-[#E4BEB8] hover:opacity-90 text-[#462F24] font-bold py-4 rounded-3xl shadow-sm transition text-lg">
+                        Sí asisto ✓
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <nav class="absolute bottom-0 w-full bg-[#F8F6F4] border-t border-[#DECFC0] flex justify-around py-4 text-[10px] font-bold text-[#DECFC0]">
+            <button onclick="cambiarPantalla('pantalla-inicio')" class="flex flex-col items-center hover:text-[#462F24] transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>INICIO</button>
+            <button onclick="cambiarPantalla('pantalla-rsvp')" class="flex flex-col items-center hover:text-[#462F24] transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>RSVP</button>
+        </nav>
+    </div>
+
+    <script>
+        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZyxEx6E7g24qKRlZV6WC2m68Y-u0zQEJg5hjCi2TN6QHHaT5XHPXmK4QT_QVw9mGa/exec"; 
+
+        const fechaEvento = new Date("Apr 30, 2026 19:00:00").getTime();
+        setInterval(function() {
+            const dist = fechaEvento - new Date().getTime();
+            if (dist < 0) return;
+            document.getElementById("dias").innerText = Math.floor(dist / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById("horas").innerText = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById("minutos").innerText = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById("segundos").innerText = Math.floor((dist % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        }, 1000);
+
+        window.history.replaceState({ pantalla: 'pantalla-inicio' }, '', '#inicio');
+
+        window.addEventListener('popstate', function(event) {
+            let pantalla = event.state ? event.state.pantalla : 'pantalla-inicio';
+            mostrarPantallaVisual(pantalla);
+        });
+
+        function cambiarPantalla(idPantalla) {
+            mostrarPantallaVisual(idPantalla);
+            window.history.pushState({ pantalla: idPantalla }, '', '#' + idPantalla.replace('pantalla-', ''));
+        }
+
+        function mostrarPantallaVisual(idPantalla) {
+            document.getElementById('pantalla-inicio').classList.add('oculto');
+            document.getElementById('pantalla-rsvp').classList.add('oculto');
+            document.getElementById(idPantalla).classList.remove('oculto');
+            window.scrollTo(0, 0);
+        }
+
+        function generarCamposAcompanantes(idContenedor, valor) {
+            let contenedor = document.getElementById(idContenedor);
+            contenedor.innerHTML = ''; 
+            for (let i = 1; i <= parseInt(valor); i++) {
+                contenedor.innerHTML += `<div class="p-4 bg-white/60 rounded-2xl border border-[#DECFC0]"><label class="block text-xs font-bold tracking-wider mb-2 opacity-80">NOMBRE ACOMPAÑANTE ${i}</label><input type="text" name="c${i}" required class="w-full bg-transparent border-b-2 border-[#DECFC0] p-2 focus:outline-none focus:border-[#E4BEB8]" placeholder="Nombre completo"></div>`;
+            }
+        }
+
+        function enviarFormulario(estatus) {
+            const form = document.getElementById('form-rsvp');
+            if (!form.checkValidity()) { form.reportValidity(); return; } 
+            
+            document.getElementById('estatus').value = estatus;
+            document.getElementById('btn-asiste').disabled = true;
+            document.getElementById('btn-no-asiste').innerText = "...";
+
+            fetch(SCRIPT_URL, { method: 'POST', body: new FormData(form) })
+            .then(() => {
+                alert(estatus === 'Asiste' ? "¡Gracias! Asistencia confirmada." : "Lamentamos que no puedas asistir. Registro guardado.");
+                form.reset();
+                generarCamposAcompanantes('campos-dinamicos', 0);
+                cambiarPantalla('pantalla-inicio');
+            })
+            .catch(() => alert("Error al enviar."))
+            .finally(() => {
+                document.getElementById('btn-asiste').disabled = false;
+                document.getElementById('btn-no-asiste').innerText = "No asisto ✗";
+            });
+        }
+    </script>
+</body>
+</html>

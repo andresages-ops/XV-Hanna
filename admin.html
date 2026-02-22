@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - XV Hanna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #F5E1E1; font-family: 'Segoe UI', sans-serif; color: #462F24; } .oculto { display: none; }</style>
+</head>
+<body class="antialiased">
+    <div class="max-w-md mx-auto min-h-screen p-6 relative shadow-lg bg-[#F5E1E1] overflow-hidden">
+        
+        <div class="flex items-center justify-between mb-6 pt-4">
+            <h1 class="font-bold text-xl tracking-wide">Panel Organizador</h1>
+            <button onclick="actualizarListaAdmin()" class="p-2 bg-[#FCEAEB] rounded-full shadow-sm hover:shadow-md transition border border-white/40">
+                <svg class="w-5 h-5 text-[#462F24]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </div>
+
+        <div id="card-asistentes" onclick="toggleFiltro('Asiste')" class="bg-[#E8CFCF] rounded-[35px] p-6 shadow-sm mb-4 flex justify-between items-center cursor-pointer transition transform active:scale-95 hover:shadow-md group relative border-4 border-transparent">
+            <svg class="absolute top-4 right-4 w-4 h-4 text-[#462F24] opacity-30 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+            <div>
+                <p class="text-xs font-bold tracking-widest opacity-60 transition">TOTAL ASISTENTES</p>
+                <h2 class="text-5xl font-bold mt-1" id="contador-total">...</h2>
+            </div>
+            <div class="mr-5 w-14 h-14 bg-[#F5E1E1] rounded-[20px] flex items-center justify-center text-[#462F24] transition group-hover:scale-110 shadow-sm">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+        </div>
+
+        <div id="card-no-asistentes" onclick="toggleFiltro('No Asiste')" class="bg-[#FCEAEB] rounded-[30px] p-5 shadow-sm mb-6 flex justify-between items-center cursor-pointer transition transform active:scale-95 hover:shadow-md group relative border-4 border-transparent">
+            <svg class="absolute top-4 right-4 w-4 h-4 text-[#D98C8C] opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+            <div>
+                <p class="text-[10px] font-bold tracking-widest opacity-60 transition">NO ASISTIRÁN (Lugares liberados)</p>
+                <h2 class="text-3xl font-bold mt-1 text-[#D98C8C]" id="contador-no-asiste">...</h2>
+            </div>
+            <div class="mr-4 w-12 h-12 bg-[#D98C8C]/20 rounded-[18px] flex items-center justify-center text-[#D98C8C] transition group-hover:scale-110">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+        </div>
+
+        <div class="relative mb-6">
+            <input type="text" id="search-input" onkeyup="renderizarLista()" placeholder="Buscar por nombre..." class="w-full bg-[#FDF7F4] rounded-full py-4 pl-12 pr-4 text-[#462F24] focus:outline-none shadow-sm placeholder-[#462F24]/50 transition border border-transparent focus:border-[#E8CFCF]">
+            <svg class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-[#462F24]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h3 id="titulo-lista" class="font-bold opacity-90 text-sm">Registro de Invitados</h3>
+            <p class="text-xs opacity-50" id="total-mostrados">...</p>
+        </div>
+        
+        <div id="lista-datos" class="space-y-3 pb-10">
+            <p class="text-sm text-center opacity-60">Cargando...</p>
+        </div>
+    </div>
+
+    <div id="modal-editar" class="fixed inset-0 bg-[#462F24]/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-[#FCEAEB] rounded-[35px] w-full max-w-md p-6 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
+            <h2 class="font-bold text-lg mb-4 text-center">Editar Registro</h2>
+            <form id="form-editar" onsubmit="guardarEdicion(event)" class="space-y-4">
+                <input type="hidden" name="action" value="editar">
+                <input type="hidden" id="edit-fila" name="fila">
+                
+                <input type="text" id="edit-nombre" name="nombre" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm" required placeholder="Nombre Principal">
+                
+                <select id="edit-estatus" name="estatus" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm">
+                    <option value="Asiste">Asiste</option>
+                    <option value="No Asiste">No Asiste</option>
+                </select>
+
+                <select id="edit-acompanantes" name="acompanantes" onchange="generarCamposAcompanantesEdit()" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm">
+                    <option value="0">0 Acompañantes</option>
+                    <option value="1">1 Acompañante</option>
+                    <option value="2">2 Acompañantes</option>
+                    <option value="3">3 Acompañantes</option>
+                    <option value="4">4 Acompañantes</option>
+                    <option value="5">5 Acompañantes</option>
+                    <option value="6">6 Acompañantes</option>
+                    <option value="7">7 Acompañantes</option>
+                    <option value="8">8 Acompañantes</option>
+                    <option value="9">9 Acompañantes</option>
+                </select>
+                
+                <div id="edit-campos-dinamicos" class="space-y-3"></div>
+                
+                <textarea id="edit-notas" name="notas" class="w-full bg-[#FDF7F4] rounded-2xl p-4 h-24 focus:outline-none shadow-sm" placeholder="Notas..."></textarea>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="history.back()" class="w-1/2 bg-[#E8CFCF] text-[#462F24] py-4 rounded-full font-bold shadow-sm opacity-80 hover:opacity-100">Cancelar</button>
+                    <button type="submit" id="btn-guardar-edicion" class="w-1/2 bg-[#E4BEB8] text-[#462F24] py-4 rounded-full font-bold shadow-sm hover:opacity-90">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZyxEx6E7g24qKRlZV6WC2m68Y-u0zQEJg5hjCi2TN6QHHaT5XHPXmK4QT_QVw9mGa/exec"; 
+        let datosGlobales = []; 
+        let filtroActual = 'Todos'; 
+
+        window.addEventListener('popstate', function(event) {
+            if (!event.state || !event.state.modal) {
+                document.getElementById('modal-editar').classList.add('hidden');
+            }
+        });
+
+        function toggleFiltro(tipo) {
+            if (filtroActual === tipo) filtroActual = 'Todos'; 
+            else filtroActual = tipo;
+            actualizarEstilosTarjetas();
+            renderizarLista();
+        }
+
+        function actualizarEstilosTarjetas() {
+            const cardAsistentes = document.getElementById('card-asistentes');
+            const cardNoAsistentes = document.getElementById('card-no-asistentes');
+            const tituloLista = document.getElementById('titulo-lista');
+            
+            cardAsistentes.classList.remove('border-white/60');
+            cardNoAsistentes.classList.remove('border-white/60');
+            cardAsistentes.classList.add('border-transparent');
+            cardNoAsistentes.classList.add('border-transparent');
+
+            if (filtroActual === 'Asiste') {
+                cardAsistentes.classList.remove('border-transparent');
+                cardAsistentes.classList.add('border-white/60'); 
+                tituloLista.innerText = "Mostrando: Solo Asistentes";
+            } else if (filtroActual === 'No Asiste') {
+                cardNoAsistentes.classList.remove('border-transparent');
+                cardNoAsistentes.classList.add('border-white/60');
+                tituloLista.innerText = "Mostrando: No Asistirán";
+            } else {
+                tituloLista.innerText = "Registro de Invitados";
+            }
+        }
+
+        function toggleDetalles(id) {
+            const detalles = document.getElementById('detalles-' + id);
+            const icono = document.getElementById('icono-' + id);
+            if (detalles.classList.contains('oculto')) {
+                detalles.classList.remove('oculto');
+                icono.style.transform = 'rotate(180deg)';
+            } else {
+                detalles.classList.add('oculto');
+                icono.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function actualizarListaAdmin() {
+            let contenedor = document.getElementById('lista-datos');
+            let contador = document.getElementById('contador-total');
+            let contadorNoAsiste = document.getElementById('contador-no-asiste');
+            contenedor.innerHTML = '<p class="text-sm text-center opacity-60 py-8">Actualizando...</p>';
+
+            try {
+                let res = await fetch(SCRIPT_URL);
+                datosGlobales = await res.json();
+                
+                let totalAsistentes = 0;
+                let totalNoAsistentes = 0;
+
+                datosGlobales.forEach((invitado) => {
+                    if(invitado.estatus === 'Asiste') totalAsistentes += invitado.totalPersonas;
+                    else totalNoAsistentes += invitado.totalPersonas;
+                });
+                
+                contador.innerText = totalAsistentes;
+                contadorNoAsiste.innerText = totalNoAsistentes;
+                
+                renderizarLista(); 
+
+            } catch (e) {
+                contenedor.innerHTML = '<p class="text-red-500 text-center text-sm py-8">Error de conexión.</p>';
+            }
+        }
+
+        function renderizarLista() {
+            let contenedor = document.getElementById('lista-datos');
+            let textoBusqueda = document.getElementById('search-input').value.toLowerCase();
+            contenedor.innerHTML = "";
+            let mostrados = 0;
+
+            datosGlobales.forEach((invitado, index) => {
+                if (filtroActual !== "Todos" && invitado.estatus !== filtroActual) return;
+                if (!invitado.nombre.toLowerCase().includes(textoBusqueda)) return;
+                
+                mostrados++;
+                let esAsistente = invitado.estatus === 'Asiste';
+                
+                // Iconos de estatus (Fondo de color con icono crema)
+                let estatusIcon = esAsistente 
+                    ? `<div class="w-6 h-6 rounded-full bg-[#E4BEB8] flex items-center justify-center text-[#FDF7F4] shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>`
+                    : `<div class="w-6 h-6 rounded-full bg-[#D98C8C] flex items-center justify-center text-[#FDF7F4] shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
+
+                // Círculo de iniciales: Verde/Rosa con 70% de opacidad
+                let bgInicial = esAsistente ? 'bg-[#C8D1C5]/70' : 'bg-[#D98C8C]/70';
+
+                let listaAcompHTML = "";
+                if(invitado.nombresAcompanantes.length > 0) {
+                    listaAcompHTML = "<ul class='list-disc pl-5 mt-2 text-xs opacity-80 space-y-1'>";
+                    invitado.nombresAcompanantes.forEach(nom => { listaAcompHTML += `<li>${nom}</li>`; });
+                    listaAcompHTML += "</ul>";
+                }
+
+                contenedor.innerHTML += `
+                    <div class="bg-[#FCEAEB] rounded-[40px] p-3 pr-5 shadow-sm transition hover:shadow-md border border-white/40">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetalles(${index})">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-full ${bgInicial} flex items-center justify-center font-bold mr-4 text-lg text-[#462F24] shadow-sm">
+                                    ${invitado.nombre.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold leading-tight text-base text-[#462F24]">${invitado.nombre}</h4>
+                                    <p class="text-[11px] opacity-60 mt-0.5">${invitado.totalPersonas} Persona(s)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                ${estatusIcon}
+                                <svg id="icono-${index}" class="w-5 h-5 opacity-40 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                        
+                        <div id="detalles-${index}" class="oculto mt-4 pt-4 border-t border-[#E8CFCF]/40">
+                            <p class="text-[10px] font-bold tracking-widest opacity-60 mb-2 pl-2">DETALLES:</p>
+                            ${listaAcompHTML}
+                            ${invitado.notas ? `<div class="mt-3 p-3 bg-white/50 rounded-2xl text-xs italic opacity-80 shadow-sm">"${invitado.notas}"</div>` : ''}
+                            
+                            <button onclick="abrirModalEditar(${index})" class="mt-4 w-full flex justify-center items-center text-xs font-bold text-[#462F24] hover:bg-white transition py-3 rounded-full bg-[#FDF7F4] shadow-sm border border-transparent">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                Editar Registro
+                            </button>
+                        </div>
+                    </div>`;
+            });
+            
+            document.getElementById('total-mostrados').innerText = `${mostrados} encontrados`;
+
+            if(mostrados === 0) {
+                contenedor.innerHTML = '<div class="flex flex-col items-center justify-center py-10 opacity-50"><svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p class="text-sm">No se encontraron resultados.</p></div>';
+            }
+        }
+
+        function abrirModalEditar(index) {
+            let inv = datosGlobales[index];
+            document.getElementById('edit-fila').value = inv.fila;
+            document.getElementById('edit-nombre').value = inv.nombre;
+            document.getElementById('edit-estatus').value = inv.estatus;
+            document.getElementById('edit-notas').value = inv.notas;
+            document.getElementById('edit-acompanantes').value = inv.acompanantesNumero;
+            
+            generarCamposAcompanantesEdit(inv.nombresAcompanantes);
+            
+            window.history.pushState({ modal: true }, '', '#editar');
+            document.getElementById('modal-editar').classList.remove('hidden');
+        }
+
+        function generarCamposAcompanantesEdit(nombresPrevios = []) {
+            let num = parseInt(document.getElementById('edit-acompanantes').value);
+            let div = document.getElementById('edit-campos-dinamicos');
+            div.innerHTML = '';
+            for(let i = 1; i <= num; i++) {
+                let valor = nombresPrevios[i-1] ? nombresPrevios[i-1] : "";
+                div.innerHTML += `<input type="text" name="c${i}" value="${valor}" class="w-full bg-[#FDF7F4] rounded-2xl p-3 text-sm focus:outline-none shadow-sm" placeholder="Nombre Acompañante ${i}">`;
+            }
+        }
+
+        function guardarEdicion(e) {
+            e.preventDefault();
+            let btn = document.getElementById('btn-guardar-edicion');
+            btn.innerText = "Guardando..."; btn.disabled = true;
+
+            fetch(SCRIPT_URL, { method: 'POST', body: new FormData(e.target) })
+            .then(() => {
+                window.history.back(); 
+                actualizarListaAdmin(); 
+            })
+            .catch(() => alert("Error al editar."))
+            .finally(() => { btn.innerText = "Guardar"; btn.disabled = false; });
+        }
+
+        window.onload = actualizarListaAdmin;
+    </script>
+</body>
+</html>
