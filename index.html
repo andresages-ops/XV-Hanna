@@ -8,6 +8,10 @@
     <style>
         body { background-color: #E4BEB8; color: #462F24; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .oculto { display: none; }
+        /* Scrollbar personalizado para el menú desplegable */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E4BEB8; border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased">
@@ -56,7 +60,7 @@
                 <h1 class="font-semibold text-lg text-[#462F24]">Confirmación de Asistencia</h1>
             </div>
 
-            <form id="form-rsvp" class="space-y-6">
+            <form id="form-rsvp" class="space-y-6 relative">
                 <input type="hidden" id="estatus" name="estatus" value="Asiste">
 
                 <div>
@@ -64,20 +68,30 @@
                     <input type="text" id="nombre" name="nombre" placeholder="Escribe tu nombre aquí" required class="w-full bg-[#F8F6F4] rounded-2xl p-4 focus:outline-none shadow-sm text-[#462F24] placeholder-[#462F24]/40 border-2 border-transparent focus:border-[#462F24]/20 transition">
                 </div>
 
-                <div>
+                <div class="relative">
                     <label class="block text-xs font-bold tracking-wider mb-2 opacity-80 text-[#462F24]">NÚMERO DE INVITADOS</label>
-                    <select id="acompanantes" name="acompanantes" onchange="generarCamposAcompanantes('campos-dinamicos', this.value)" class="w-full bg-[#F8F6F4] rounded-2xl p-4 focus:outline-none shadow-sm text-[#462F24] border-2 border-transparent focus:border-[#462F24]/20 transition">
-                        <option value="0">Ninguno (Solo asisto yo)</option>
-                        <option value="1">1 Invitado extra</option>
-                        <option value="2">2 Invitados extra</option>
-                        <option value="3">3 Invitados extra</option>
-                        <option value="4">4 Invitados extra</option>
-                        <option value="5">5 Invitados extra</option>
-                        <option value="6">6 Invitados extra</option>
-                        <option value="7">7 Invitados extra</option>
-                        <option value="8">8 Invitados extra</option>
-                        <option value="9">9 Invitados extra</option>
-                    </select>
+                    
+                    <input type="hidden" id="acompanantes" name="acompanantes" value="0">
+                    
+                    <button type="button" id="btn-dropdown" onclick="toggleDropdown()" class="w-full bg-[#F8F6F4] rounded-2xl p-4 flex justify-between items-center focus:outline-none shadow-sm text-[#462F24] border-2 border-transparent transition text-left">
+                        <span id="texto-dropdown" class="opacity-100">Ninguno (Solo asisto yo)</span>
+                        <svg id="icono-dropdown" class="w-5 h-5 opacity-60 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+
+                    <div id="lista-dropdown" class="hidden absolute top-[85px] left-0 w-full bg-[#F8F6F4] rounded-2xl shadow-xl z-50 border border-[#E4BEB8]/40 max-h-[220px] overflow-y-auto transform transition-all">
+                        <ul class="py-2 text-[#462F24] text-sm">
+                            <li onclick="seleccionarInvitados(0, 'Ninguno (Solo asisto yo)')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition">Ninguno (Solo asisto yo)</li>
+                            <li onclick="seleccionarInvitados(1, '1 Invitado')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">1 Invitado</li>
+                            <li onclick="seleccionarInvitados(2, '2 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">2 Invitados</li>
+                            <li onclick="seleccionarInvitados(3, '3 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">3 Invitados</li>
+                            <li onclick="seleccionarInvitados(4, '4 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">4 Invitados</li>
+                            <li onclick="seleccionarInvitados(5, '5 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">5 Invitados</li>
+                            <li onclick="seleccionarInvitados(6, '6 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">6 Invitados</li>
+                            <li onclick="seleccionarInvitados(7, '7 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">7 Invitados</li>
+                            <li onclick="seleccionarInvitados(8, '8 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">8 Invitados</li>
+                            <li onclick="seleccionarInvitados(9, '9 Invitados')" class="px-5 py-3 hover:bg-[#E4BEB8]/30 cursor-pointer transition border-t border-[#E4BEB8]/20">9 Invitados</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div id="campos-dinamicos" class="space-y-4"></div>
@@ -119,7 +133,7 @@
     </div>
 
     <script>
-        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE
+        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZyxEx6E7g24qKRlZV6WC2m68Y-u0zQEJg5hjCi2TN6QHHaT5XHPXmK4QT_QVw9mGa/exec"; 
 
         const fechaEvento = new Date("Apr 30, 2026 19:00:00").getTime();
@@ -150,6 +164,43 @@
             document.getElementById('pantalla-rsvp').classList.add('oculto');
             document.getElementById(idPantalla).classList.remove('oculto');
             window.scrollTo(0, 0);
+        }
+
+        // LÓGICA DEL MENÚ DESPLEGABLE PERSONALIZADO
+        function toggleDropdown() {
+            const lista = document.getElementById('lista-dropdown');
+            const icono = document.getElementById('icono-dropdown');
+            const btn = document.getElementById('btn-dropdown');
+            
+            lista.classList.toggle('hidden');
+            if(lista.classList.contains('hidden')) {
+                icono.style.transform = 'rotate(0deg)';
+                btn.classList.remove('border-[#462F24]/20');
+            } else {
+                icono.style.transform = 'rotate(180deg)';
+                btn.classList.add('border-[#462F24]/20');
+            }
+        }
+
+        function seleccionarInvitados(valor, texto) {
+            document.getElementById('acompanantes').value = valor;
+            document.getElementById('texto-dropdown').innerText = texto;
+            toggleDropdown();
+            generarCamposAcompanantes('campos-dinamicos', valor);
+        }
+
+        // Cierra el menú desplegable si tocas fuera de él
+        window.onclick = function(event) {
+            if (!event.target.closest('#btn-dropdown') && !event.target.closest('#lista-dropdown')) {
+                const lista = document.getElementById('lista-dropdown');
+                const icono = document.getElementById('icono-dropdown');
+                const btn = document.getElementById('btn-dropdown');
+                if (!lista.classList.contains('hidden')) {
+                    lista.classList.add('hidden');
+                    icono.style.transform = 'rotate(0deg)';
+                    btn.classList.remove('border-[#462F24]/20');
+                }
+            }
         }
 
         function generarCamposAcompanantes(idContenedor, valor) {
@@ -200,6 +251,10 @@
             fetch(SCRIPT_URL, { method: 'POST', body: new FormData(form) })
             .then(() => {
                 form.reset();
+                // Restaurar visualmente el menú desplegable al valor por defecto
+                document.getElementById('texto-dropdown').innerText = 'Ninguno (Solo asisto yo)';
+                document.getElementById('acompanantes').value = '0';
+                
                 generarCamposAcompanantes('campos-dinamicos', 0);
                 cambiarPantalla('pantalla-inicio'); 
                 
