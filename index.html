@@ -102,6 +102,20 @@
             <button onclick="cambiarPantalla('pantalla-inicio')" class="flex flex-col items-center hover:text-[#462F24] transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>INICIO</button>
             <button onclick="cambiarPantalla('pantalla-rsvp')" class="flex flex-col items-center hover:text-[#462F24] transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>RSVP</button>
         </nav>
+
+        <div id="custom-alert" class="fixed inset-0 bg-[#462F24]/60 hidden z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+            <div class="bg-[#F8F6F4] rounded-[35px] w-full max-w-sm p-8 text-center shadow-2xl border border-[#DECFC0]/50 transform transition-all">
+                <div id="alert-icon-container" class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center">
+                    <svg id="alert-icon" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                </div>
+                <h2 id="alert-title" class="font-bold text-xl mb-2 text-[#462F24] tracking-wide">Título</h2>
+                <p id="alert-message" class="text-sm opacity-80 mb-8 text-[#462F24]">Mensaje</p>
+                <button onclick="cerrarAlerta()" id="alert-button" class="w-full font-bold py-4 rounded-3xl shadow-sm transition">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -123,6 +137,7 @@
         window.addEventListener('popstate', function(event) {
             let pantalla = event.state ? event.state.pantalla : 'pantalla-inicio';
             mostrarPantallaVisual(pantalla);
+            document.getElementById('custom-alert').classList.add('hidden'); // Ocultar pop-up si le dan "atrás"
         });
 
         function cambiarPantalla(idPantalla) {
@@ -145,6 +160,36 @@
             }
         }
 
+        // Lógica de la alerta personalizada
+        function mostrarAlerta(tipo, titulo, mensaje) {
+            document.getElementById('alert-title').innerText = titulo;
+            document.getElementById('alert-message').innerText = mensaje;
+            
+            const iconContainer = document.getElementById('alert-icon-container');
+            const icon = document.getElementById('alert-icon');
+            const btn = document.getElementById('alert-button');
+
+            if (tipo === 'exito') {
+                iconContainer.className = "mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-[#E4BEB8]/30 text-[#462F24]";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+                btn.className = "w-full bg-[#E4BEB8] hover:opacity-90 text-[#462F24] font-bold py-4 rounded-3xl shadow-sm transition";
+            } else if (tipo === 'triste') {
+                iconContainer.className = "mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-[#D98C8C]/20 text-[#D98C8C]";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+                btn.className = "w-full bg-[#D98C8C] hover:bg-[#C97A7A] text-white font-bold py-4 rounded-3xl shadow-sm transition";
+            } else {
+                iconContainer.className = "mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-500";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                btn.className = "w-full bg-gray-200 text-gray-800 font-bold py-4 rounded-3xl shadow-sm transition";
+            }
+
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        function cerrarAlerta() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
         function enviarFormulario(estatus) {
             const form = document.getElementById('form-rsvp');
             if (!form.checkValidity()) { form.reportValidity(); return; } 
@@ -155,12 +200,19 @@
 
             fetch(SCRIPT_URL, { method: 'POST', body: new FormData(form) })
             .then(() => {
-                alert(estatus === 'Asiste' ? "¡Gracias! Asistencia confirmada." : "Lamentamos que no puedas asistir. Registro guardado.");
                 form.reset();
                 generarCamposAcompanantes('campos-dinamicos', 0);
-                cambiarPantalla('pantalla-inicio');
+                cambiarPantalla('pantalla-inicio'); // Te regresa al inicio por detrás de la alerta
+                
+                if(estatus === 'Asiste') {
+                    mostrarAlerta('exito', '¡Confirmado!', 'Nos emociona mucho contar con tu presencia. Hemos guardado tu registro exitosamente.');
+                } else {
+                    mostrarAlerta('triste', '¡Qué pena!', 'Lamentamos mucho que no puedas acompañarnos, pero agradecemos que nos avises.');
+                }
             })
-            .catch(() => alert("Error al enviar."))
+            .catch(() => {
+                mostrarAlerta('error', 'Error de conexión', 'No pudimos enviar tu respuesta. Por favor revisa tu internet e intenta de nuevo.');
+            })
             .finally(() => {
                 document.getElementById('btn-asiste').disabled = false;
                 document.getElementById('btn-no-asiste').innerText = "No asisto ✗";
