@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gestión de Mesas - XV Hanna</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "fondo-app": "#E4BEB8",
+                        "tarjeta": "#F8F6F4",
+                        "texto-oscuro": "#462F24",
+                        "acento-verde": "#C8D1C5",
+                        "alerta-roja": "#D98C8C",
+                    },
+                    fontFamily: { "sans": ["Segoe UI", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { height: 100dvh; overflow: hidden; } 
+    </style>
+</head>
+
+<body class="bg-fondo-app font-sans flex flex-col text-texto-oscuro antialiased">
+
+    <header class="flex items-center justify-between px-4 py-4 bg-fondo-app/90 backdrop-blur-md z-50 flex-shrink-0">
+        <button onclick="window.history.go(-1)" class="p-2 rounded-full bg-tarjeta shadow-sm hover:shadow-md transition">
+            <svg class="w-5 h-5 text-acento-verde" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <h1 class="text-lg font-bold text-center flex-1 text-tarjeta drop-shadow-sm">Gestión de Mesas</h1>
+        <button id="btn-guardar" onclick="guardarMesasEnLaNube()" class="px-5 py-2 rounded-full bg-tarjeta text-texto-oscuro text-xs font-bold shadow-sm hover:bg-acento-verde hover:text-white transition">
+            Guardar
+        </button>
+    </header>
+
+    <div class="flex border-b border-tarjeta/30 bg-fondo-app px-2 flex-shrink-0">
+        <a class="flex-1 py-4 text-center border-b-4 border-transparent text-tarjeta/70 font-semibold text-sm hover:text-tarjeta transition" href="#">Lista de Invitados</a>
+        <a class="flex-1 py-4 text-center border-b-4 border-tarjeta text-tarjeta font-bold text-sm" href="#">Mapa del Salón</a>
+    </div>
+
+    <main class="flex-1 overflow-y-auto hide-scrollbar pb-10 relative">
+        <div class="px-4 py-5 grid grid-cols-2 gap-4">
+            <div class="bg-tarjeta p-4 rounded-[30px] shadow-sm border border-acento-verde/30">
+                <p class="text-[10px] text-texto-oscuro/60 font-bold tracking-widest mb-1">CONFIRMADOS</p>
+                <div class="flex items-end gap-2">
+                    <span class="text-3xl font-bold" id="total-asistentes">-</span>
+                    <span class="text-[10px] text-texto-oscuro mb-1 font-bold bg-acento-verde px-2 py-0.5 rounded-full shadow-sm">Listos</span>
+                </div>
+            </div>
+            <div class="bg-tarjeta p-4 rounded-[30px] shadow-sm border border-acento-verde/30">
+                <p class="text-[10px] text-texto-oscuro/60 font-bold tracking-widest mb-1">CAPACIDAD TOTAL</p>
+                <div class="flex items-end gap-2">
+                    <span class="text-3xl font-bold"><span id="lugares-ocupados">-</span>/<span id="lugares-totales">-</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-4 mb-4">
+            <div class="relative">
+                <input type="text" id="buscador-invitados" onkeyup="renderizarPantalla()" placeholder="Buscar invitado..." class="w-full bg-tarjeta rounded-full py-3 pl-12 pr-4 text-texto-oscuro focus:outline-none shadow-sm border border-transparent focus:border-acento-verde transition placeholder-texto-oscuro/40 text-sm">
+                <svg class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-acento-verde" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="px-4 flex justify-between items-center mb-3 text-tarjeta drop-shadow-sm">
+                <h3 class="font-bold text-lg">Sin Asignar</h3>
+                <span class="text-xs font-bold bg-tarjeta/20 px-3 py-1 rounded-full shadow-inner" id="contador-sin-asignar">Cargando...</span>
+            </div>
+            <div id="carrusel-sin-asignar" class="flex overflow-x-auto hide-scrollbar gap-3 px-4 pb-4"></div>
+        </div>
+
+        <div class="px-4">
+            <h3 class="font-bold text-lg mb-4 text-tarjeta drop-shadow-sm">Disposición de Mesas</h3>
+            <div id="grid-mesas" class="grid grid-cols-2 gap-4 pb-8"></div>
+        </div>
+    </main>
+
+    <div id="modal-asignar" class="fixed inset-0 bg-texto-oscuro/60 hidden z-50 flex items-end justify-center pb-10 px-4 transition-opacity">
+        <div class="bg-tarjeta rounded-[35px] w-full max-w-sm p-6 text-center shadow-2xl border border-white/50">
+            <h2 class="font-bold text-lg mb-1">¿Dónde sentamos a?</h2>
+            <p id="nombre-asignar" class="text-sm opacity-80 mb-6 font-bold text-fondo-app bg-fondo-app/20 inline-block px-4 py-1 rounded-full border border-fondo-app/50">Nombre Persona</p>
+            <div id="botones-mesas" class="grid grid-cols-3 gap-3 mb-4 max-h-[40vh] overflow-y-auto hide-scrollbar p-1"></div>
+            <button onclick="history.back()" class="w-full bg-fondo-app text-texto-oscuro font-bold py-3 rounded-3xl shadow-sm mt-2">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modal-detalle-mesa" class="fixed inset-0 bg-texto-oscuro/60 hidden z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-tarjeta rounded-[35px] w-full max-w-md p-6 shadow-2xl border border-acento-verde/40 flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="font-bold text-2xl text-texto-oscuro" id="detalle-mesa-titulo">Mesa</h2>
+                    <p class="text-xs font-bold text-texto-oscuro/60 tracking-wider" id="detalle-mesa-cupo">0/0 ASIENTOS</p>
+                </div>
+                <button onclick="history.back()" class="w-8 h-8 bg-fondo-app/50 rounded-full flex items-center justify-center text-texto-oscuro hover:bg-alerta-roja transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="detalle-mesa-lista" class="flex-1 overflow-y-auto hide-scrollbar space-y-2 mb-6 border-t border-b border-fondo-app/30 py-4 min-h-[150px]"></div>
+            <div class="space-y-3 mt-auto">
+                <button onclick="abrirModalEditarMesa()" class="w-full bg-acento-verde text-texto-oscuro font-bold py-3.5 rounded-3xl shadow-sm hover:opacity-90 transition flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Editar Ajustes de Mesa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar-mesa" class="fixed inset-0 bg-texto-oscuro/80 hidden z-[60] flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-tarjeta rounded-[35px] w-full max-w-sm p-6 shadow-2xl border border-acento-verde/50">
+            <h2 class="font-bold text-lg mb-4 text-center" id="titulo-modal-editar">Ajustes</h2>
+            <input type="hidden" id="edit-mesa-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold tracking-wider mb-2 opacity-80">NOMBRE DE LA MESA</label>
+                    <input type="text" id="edit-mesa-nombre" class="w-full bg-fondo-app/30 rounded-2xl p-4 focus:outline-none border-2 border-transparent focus:border-acento-verde transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold tracking-wider mb-2 opacity-80">NÚMERO MÁXIMO DE SILLAS</label>
+                    <input type="number" id="edit-mesa-capacidad" min="1" max="20" class="w-full bg-fondo-app/30 rounded-2xl p-4 focus:outline-none border-2 border-transparent focus:border-acento-verde transition">
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="button" onclick="history.back()" class="w-1/2 bg-fondo-app text-texto-oscuro font-bold py-3 rounded-3xl shadow-sm transition">Cancelar</button>
+                <button type="button" onclick="guardarEdicionMesa()" class="w-1/2 bg-acento-verde text-texto-oscuro font-bold py-3 rounded-3xl shadow-sm hover:opacity-90 transition">Aceptar</button>
+            </div>
+            <button id="btn-eliminar-mesa" onclick="eliminarMesa()" class="w-full mt-3 bg-alerta-roja/20 text-alerta-roja font-bold py-3 rounded-3xl hover:bg-alerta-roja hover:text-white transition">Eliminar Mesa Completa</button>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDAaQN5JrQp8-OS3SwbuhgP8PSZ4v0p8CsTHbWjeB65vdeSde0tCBy3adj9R6yffta/exec"; 
+        
+        let invitadosIndividuales = []; 
+        let mesas = [];     
+        let invitadoSeleccionado = null; 
+        let mesaSiguienteId = 1;
+        let mesaAbiertaActualmente = null;
+
+        const TONOS_ROSA = ['bg-[#FDF7F4]','bg-[#F9E0E0]','bg-[#F2D6D6]','bg-[#F5CACA]','bg-[#EFC2C2]'];
+
+        window.history.replaceState({ modal: null }, '', '');
+        window.addEventListener('popstate', function(event) {
+            document.getElementById('modal-asignar').classList.add('hidden');
+            document.getElementById('modal-detalle-mesa').classList.add('hidden');
+            document.getElementById('modal-editar-mesa').classList.add('hidden');
+            if (event.state && event.state.modal) {
+                let modalId = event.state.modal;
+                if (modalId === 'modal-detalle-mesa') actualizarUIDetalleMesa(event.state.mesaId);
+                document.getElementById(modalId).classList.remove('hidden');
+            } else {
+                mesaAbiertaActualmente = null;
+                invitadoSeleccionado = null;
+            }
+        });
+
+        // 🟢 NOTA: Lógica para generar un ID estable que no se rompa si eliminas filas en Excel
+        function crearIdLimpio(nombre, indice) {
+            return nombre.trim().toLowerCase().replace(/[^a-z0-9]/g, '') + "_" + indice;
+        }
+
+        async function cargarDatos() {
+            try {
+                // 1. Descargar Invitados
+                let resInvitados = await fetch(SCRIPT_URL);
+                let datosGlobales = await resInvitados.json();
+                
+                // 2. Descargar Mesas Guardadas en la Nube
+                let resMesas = await fetch(SCRIPT_URL + "?action=obtenerMesas");
+                let mesasGuardadas = await resMesas.json();
+
+                // Procesar Invitados
+                datosGlobales.forEach((inv) => {
+                    if(inv.estatus === 'Asiste') {
+                        invitadosIndividuales.push({ id: crearIdLimpio(inv.nombre, 0), nombre: inv.nombre, mesaId: null });
+                        
+                        if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
+                            inv.nombresAcompanantes.forEach((nom, j) => {
+                                invitadosIndividuales.push({ id: crearIdLimpio(inv.nombre, j+1), nombre: nom || `Acomp. de ${inv.nombre.split(' ')[0]}`, mesaId: null });
+                            });
+                        } else {
+                            for(let i=1; i < inv.totalPersonas; i++) {
+                                invitadosIndividuales.push({ id: crearIdLimpio(inv.nombre, i), nombre: `Acomp. de ${inv.nombre.split(' ')[0]}`, mesaId: null });
+                            }
+                        }
+                    }
+                });
+
+                // Cargar y Sincronizar Mesas
+                if(mesasGuardadas && mesasGuardadas.length > 0) {
+                    mesas = mesasGuardadas;
+                    
+                    // Sincronización Inteligente: Cruzar la nube con los invitados actuales
+                    mesas.forEach(mesa => {
+                        let personasValidas = [];
+                        mesa.personas.forEach(pGuardada => {
+                            let invActivo = invitadosIndividuales.find(i => i.id === pGuardada.id);
+                            if(invActivo) {
+                                invActivo.mesaId = mesa.id; 
+                                personasValidas.push(invActivo); // Mantiene solo a los que siguen asistiendo
+                            }
+                        });
+                        mesa.personas = personasValidas;
+                        mesa.ocupados = personasValidas.length;
+                        if(mesa.id >= mesaSiguienteId) mesaSiguienteId = mesa.id + 1;
+                    });
+                } else {
+                    // Si no hay mesas en la nube, crear 10 vacías
+                    for(let i = 1; i <= 10; i++) {
+                        mesas.push({ id: mesaSiguienteId, nombre: `Mesa ${mesaSiguienteId}`, capacidad: 10, ocupados: 0, personas: [] });
+                        mesaSiguienteId++;
+                    }
+                }
+
+                document.getElementById('total-asistentes').innerText = invitadosIndividuales.length;
+                renderizarPantalla();
+            } catch (error) {
+                document.getElementById('carrusel-sin-asignar').innerHTML = '<p class="text-sm text-white/80 px-4">Error al conectar con la nube.</p>';
+            }
+        }
+
+        // 🟢 NOTA: LA FUNCIÓN QUE GUARDA TODO EN LA NUBE AL TOCAR EL BOTÓN
+        function guardarMesasEnLaNube() {
+            const btn = document.getElementById('btn-guardar');
+            btn.innerText = "Guardando...";
+            btn.classList.add("opacity-50");
+            btn.disabled = true;
+
+            let formData = new FormData();
+            formData.append("action", "guardarMesas");
+            formData.append("datos", JSON.stringify(mesas));
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.text())
+            .then(texto => {
+                alert("¡Guardado en la nube! Tu organización está a salvo.");
+            })
+            .catch(() => alert("Error al guardar. Revisa tu internet."))
+            .finally(() => {
+                btn.innerText = "Guardar";
+                btn.classList.remove("opacity-50");
+                btn.disabled = false;
+            });
+        }
+
+        function renderizarPantalla() {
+            let terminoBusqueda = document.getElementById('buscador-invitados').value.toLowerCase();
+            let sinAsignar = invitadosIndividuales.filter(i => i.mesaId === null && i.nombre.toLowerCase().includes(terminoBusqueda));
+            document.getElementById('contador-sin-asignar').innerText = `${invitadosIndividuales.filter(i=>i.mesaId===null).length} restantes`;
+            
+            let carruselHTML = '';
+            sinAsignar.forEach((inv, index) => {
+                let iniciales = inv.nombre.substring(0,2).toUpperCase();
+                let colorTarjeta = TONOS_ROSA[index % TONOS_ROSA.length];
+                
+                carruselHTML += `
+                    <div onclick="abrirModalAsignar('${inv.id}')" class="min-w-[90px] max-w-[100px] ${colorTarjeta} p-3 rounded-[25px] flex flex-col items-center gap-2 shadow-sm border border-white/50 cursor-pointer hover:shadow-md transition">
+                        <div class="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center text-texto-oscuro font-bold text-sm shadow-inner border border-white/80">
+                            ${iniciales}
+                        </div>
+                        <span class="text-[11px] font-bold text-center truncate w-full text-texto-oscuro">${inv.nombre}</span>
+                    </div>
+                `;
+            });
+
+            if(sinAsignar.length === 0 && terminoBusqueda !== "") carruselHTML = '<p class="text-sm text-white/80 w-full text-center py-4">No se encontró.</p>';
+            else if (sinAsignar.length === 0) carruselHTML = '<p class="text-sm text-white/80 w-full text-center py-4">¡Todos tienen mesa!</p>';
+            
+            document.getElementById('carrusel-sin-asignar').innerHTML = carruselHTML;
+
+            let mesasHTML = '';
+            let lugaresOcupados = 0;
+            let lugaresTotales = 0;
+
+            mesas.forEach(mesa => {
+                lugaresOcupados += mesa.ocupados;
+                lugaresTotales += parseInt(mesa.capacidad);
+                let estaLlena = mesa.ocupados >= mesa.capacidad;
+                let bordeMesa = mesa.personas.length > 0 ? "border-acento-verde/50 bg-white" : "border-white/50 bg-tarjeta opacity-80";
+                let iconoCheck = estaLlena ? `<div class="absolute top-3 right-3 text-acento-verde bg-acento-verde/20 rounded-full p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>` : '';
+
+                mesasHTML += `
+                    <div onclick="abrirDetalleMesa(${mesa.id})" class="rounded-[35px] p-5 shadow-sm relative flex flex-col items-center border-2 transition ${bordeMesa} cursor-pointer hover:shadow-md aspect-square justify-center">
+                        ${iconoCheck}
+                        <div class="w-16 h-16 rounded-full border-2 ${estaLlena ? 'border-dashed border-acento-verde bg-acento-verde/20' : 'border-texto-oscuro/10 bg-fondo-app/30'} flex items-center justify-center mb-3">
+                            <span class="font-bold text-texto-oscuro text-2xl">${mesa.id}</span>
+                        </div>
+                        <div class="text-center w-full">
+                            <p class="font-bold text-sm mb-1 truncate text-texto-oscuro">${mesa.nombre}</p>
+                            <p class="text-[10px] text-texto-oscuro/60 font-bold tracking-widest">${mesa.ocupados}/${mesa.capacidad} ASIENTOS</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            mesasHTML += `
+                <div onclick="abrirModalCrearMesa()" class="rounded-[35px] relative flex flex-col items-center justify-center border-2 border-dashed border-acento-verde/60 bg-acento-verde/10 cursor-pointer hover:bg-acento-verde/20 transition aspect-square">
+                    <div class="w-12 h-12 rounded-full bg-acento-verde/30 flex items-center justify-center mb-2 text-texto-oscuro">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <p class="font-bold text-sm text-texto-oscuro/80">Añadir Mesa</p>
+                </div>
+            `;
+
+            document.getElementById('grid-mesas').innerHTML = mesasHTML;
+            document.getElementById('lugares-ocupados').innerText = lugaresOcupados;
+            document.getElementById('lugares-totales').innerText = lugaresTotales;
+        }
+
+        function actualizarUIDetalleMesa(mesaId) {
+            let mesa = mesas.find(m => m.id === mesaId);
+            mesaAbiertaActualmente = mesa;
+            document.getElementById('detalle-mesa-titulo').innerText = mesa.nombre;
+            document.getElementById('detalle-mesa-cupo').innerText = `${mesa.ocupados}/${mesa.capacidad} ASIENTOS OCUPADOS`;
+
+            let listaHTML = '';
+            if(mesa.personas.length === 0) {
+                listaHTML = `<div class="flex flex-col items-center justify-center h-full opacity-40"><svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg><p class="text-sm font-bold">Mesa Vacía</p></div>`;
+            } else {
+                mesa.personas.forEach((per, index) => {
+                    let iniciales = per.nombre.substring(0,2).toUpperCase();
+                    let colorTarjeta = TONOS_ROSA[index % TONOS_ROSA.length];
+                    listaHTML += `
+                        <div class="flex justify-between items-center ${colorTarjeta} rounded-2xl p-3 border border-white/50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-texto-oscuro shadow-sm border border-white/80">${iniciales}</div>
+                                <span class="text-sm font-bold text-texto-oscuro truncate max-w-[200px]">${per.nombre}</span>
+                            </div>
+                            <button onclick="quitarDeMesa('${per.id}')" class="text-alerta-roja bg-white rounded-full p-2 shadow-sm hover:bg-alerta-roja hover:text-white transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"></path></svg>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('detalle-mesa-lista').innerHTML = listaHTML;
+        }
+
+        function abrirDetalleMesa(mesaId) {
+            actualizarUIDetalleMesa(mesaId);
+            document.getElementById('modal-detalle-mesa').classList.remove('hidden');
+            window.history.pushState({ modal: 'modal-detalle-mesa', mesaId: mesaId }, '', '#detalle-mesa');
+        }
+
+        function abrirModalAsignar(invitadoId) {
+            invitadoSeleccionado = invitadosIndividuales.find(i => i.id === invitadoId);
+            document.getElementById('nombre-asignar').innerText = invitadoSeleccionado.nombre;
+            
+            let botonesHTML = '';
+            mesas.forEach(mesa => {
+                if(mesa.ocupados < mesa.capacidad) {
+                    botonesHTML += `<button onclick="asignarMesa(${mesa.id})" class="bg-fondo-app/40 hover:bg-acento-verde border border-white rounded-2xl py-3 text-sm font-bold transition shadow-sm truncate px-1">${mesa.nombre}</button>`;
+                } else {
+                    botonesHTML += `<button disabled class="bg-texto-oscuro/5 border border-transparent rounded-2xl py-3 text-sm font-bold opacity-40 truncate px-1">${mesa.nombre}</button>`;
+                }
+            });
+
+            document.getElementById('botones-mesas').innerHTML = botonesHTML;
+            document.getElementById('modal-asignar').classList.remove('hidden');
+            window.history.pushState({ modal: 'modal-asignar' }, '', '#asignar-mesa');
+        }
+
+        function asignarMesa(mesaId) {
+            let mesa = mesas.find(m => m.id === mesaId);
+            invitadoSeleccionado.mesaId = mesaId;
+            mesa.personas.push(invitadoSeleccionado);
+            mesa.ocupados += 1; 
+            
+            document.getElementById('buscador-invitados').value = ''; 
+            renderizarPantalla();
+            history.back(); 
+        }
+
+        function quitarDeMesa(invitadoId) {
+            let inv = invitadosIndividuales.find(i => i.id === invitadoId);
+            let mesa = mesas.find(m => m.id === inv.mesaId);
+            
+            mesa.personas = mesa.personas.filter(p => p.id !== invitadoId);
+            mesa.ocupados -= 1;
+            inv.mesaId = null;
+            
+            renderizarPantalla();
+            if(mesaAbiertaActualmente && mesaAbiertaActualmente.id === mesa.id) actualizarUIDetalleMesa(mesa.id);
+        }
+
+        function abrirModalEditarMesa() {
+            document.getElementById('modal-detalle-mesa').classList.add('hidden');
+            document.getElementById('titulo-modal-editar').innerText = `Ajustes: ${mesaAbiertaActualmente.nombre}`;
+            document.getElementById('edit-mesa-id').value = mesaAbiertaActualmente.id;
+            document.getElementById('edit-mesa-nombre').value = mesaAbiertaActualmente.nombre;
+            document.getElementById('edit-mesa-capacidad').value = mesaAbiertaActualmente.capacidad;
+            
+            document.getElementById('btn-eliminar-mesa').classList.remove('hidden');
+            document.getElementById('modal-editar-mesa').classList.remove('hidden');
+            window.history.pushState({ modal: 'modal-editar-mesa' }, '', '#editar-mesa');
+        }
+
+        function abrirModalCrearMesa() {
+            document.getElementById('titulo-modal-editar').innerText = "Nueva Mesa";
+            document.getElementById('edit-mesa-id').value = "NUEVA";
+            document.getElementById('edit-mesa-nombre').value = `Mesa ${mesaSiguienteId}`;
+            document.getElementById('edit-mesa-capacidad').value = 10;
+            
+            document.getElementById('btn-eliminar-mesa').classList.add('hidden');
+            document.getElementById('modal-editar-mesa').classList.remove('hidden');
+            window.history.pushState({ modal: 'modal-editar-mesa' }, '', '#crear-mesa');
+        }
+
+        function guardarEdicionMesa() {
+            let id = document.getElementById('edit-mesa-id').value;
+            let nombre = document.getElementById('edit-mesa-nombre').value || "Mesa Sin Nombre";
+            let capacidad = parseInt(document.getElementById('edit-mesa-capacidad').value) || 10;
+
+            if (id === "NUEVA") {
+                mesas.push({ id: mesaSiguienteId, nombre: nombre, capacidad: capacidad, ocupados: 0, personas: [] });
+                mesaSiguienteId++;
+            } else {
+                let mesa = mesas.find(m => m.id == id);
+                mesa.nombre = nombre;
+                mesa.capacidad = capacidad < mesa.ocupados ? mesa.ocupados : capacidad; 
+            }
+            renderizarPantalla();
+            history.back(); 
+        }
+
+        function eliminarMesa() {
+            let id = document.getElementById('edit-mesa-id').value;
+            let confirmacion = confirm("¿Estás seguro de eliminar esta mesa?");
+            if (confirmacion) {
+                let mesa = mesas.find(m => m.id == id);
+                mesa.personas.forEach(p => { invitadosIndividuales.find(i => i.id === p.id).mesaId = null; });
+                mesas = mesas.filter(m => m.id != id);
+                renderizarPantalla();
+                if (id !== "NUEVA") history.go(-2); else history.back();
+            }
+        }
+
+        window.onload = cargarDatos;
+    </script>
+</body>
+</html>
