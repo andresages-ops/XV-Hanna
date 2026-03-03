@@ -1,94 +1,187 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - XV Hanna</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Panel Organizador - XV Hanna</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #F5E1E1; font-family: 'Segoe UI', sans-serif; color: #462F24; } .oculto { display: none; }</style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "fondo-app": "#F5E1E1",     // Rosa base del fondo
+                        "tarjeta": "#FDF5F5",       // Rosa súper claro/casi blanco
+                        "tarjeta-fuerte": "#EAC6C6",// Rosa oscuro
+                        "texto-oscuro": "#4A3B3B",  // Texto oscuro / Café grisáceo
+                        "acento-verde": "#D5E3D1",  // Verde pastel
+                        "alerta-roja": "#E8B4B4",   // Rosa/Rojo suave
+                    },
+                    fontFamily: { "sans": ["Segoe UI", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { min-height: 100dvh; overflow-x: hidden; overscroll-behavior-y: contain; } /* overscroll-behavior evita el refresh nativo doble del navegador */
+        .expand-transition { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
+        .filter-transition { transition: all 0.3s ease; }
+        /* Animación para el Pull to Refresh */
+        #pull-to-refresh { transition: height 0.2s ease-out; }
+    </style>
 </head>
-<body class="antialiased">
-    <div class="max-w-md mx-auto min-h-screen p-6 relative shadow-lg bg-[#F5E1E1] overflow-hidden">
+
+<body class="bg-fondo-app font-sans flex flex-col text-texto-oscuro antialiased">
+
+    <div id="pull-to-refresh" class="w-full flex items-center justify-center bg-fondo-app overflow-hidden h-0 text-texto-oscuro/60 text-sm font-bold gap-2">
+        <svg id="ptr-icon" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        <span id="ptr-text">Desliza para actualizar...</span>
+    </div>
+
+    <header class="flex items-center justify-between px-6 pt-6 pb-4 relative z-20">
+        <h1 class="text-2xl font-extrabold text-texto-oscuro">Panel Organizador</h1>
         
-        <div class="flex items-center justify-between mb-6 pt-4">
-            <h1 class="font-bold text-xl tracking-wide">Panel Organizador</h1>
-            <button onclick="actualizarListaAdmin()" class="p-2 bg-[#FCEAEB] rounded-full shadow-sm hover:shadow-md transition border border-white/40">
-                <svg class="w-5 h-5 text-[#462F24]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <div class="flex items-center gap-2">
+            <button onclick="descargarExcel()" class="w-10 h-10 rounded-full border border-texto-oscuro/10 flex items-center justify-center hover:bg-white/50 transition shadow-sm text-texto-oscuro bg-tarjeta/40" title="Descargar Asistentes">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </button>
+            
+            <button onclick="cargarDatos()" class="w-10 h-10 rounded-full border border-texto-oscuro/10 flex items-center justify-center hover:bg-white/50 transition shadow-sm text-texto-oscuro bg-tarjeta/40" title="Actualizar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="px-5 pb-10">
+        
+        <div id="card-asiste" onclick="filtrarPorEstatus('Asiste')" class="filter-transition bg-tarjeta-fuerte rounded-[40px] p-8 shadow-sm mb-4 relative overflow-hidden min-h-[190px] flex flex-col justify-center cursor-pointer hover:shadow-md transform">
+            
+            <div class="flex items-center gap-2 mb-2">
+                <p class="text-[12px] font-bold tracking-widest text-texto-oscuro/70 uppercase">Total Asistentes</p>
+                <span id="badge-asiste" class="bg-white text-texto-oscuro text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm hidden uppercase tracking-wider">Activo</span>
+            </div>
+            
+            <div class="flex items-center justify-between z-10 relative">
+                <span class="text-7xl font-black text-texto-oscuro tracking-tighter" id="stat-total-personas">0</span>
+                <div class="w-16 h-16 bg-tarjeta/40 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
+                    <svg class="w-9 h-9 text-texto-oscuro" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+            </div>
+
+            <div id="avatares-confirmados" class="mt-4 flex items-center -space-x-2 relative z-10">
+                </div>
+
+            <div id="flecha-asiste" class="absolute top-7 right-7 text-texto-oscuro/40">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+        </div>
+
+        <div id="card-no-asiste" onclick="filtrarPorEstatus('No Asiste')" class="filter-transition bg-tarjeta rounded-[35px] p-6 shadow-sm mb-6 flex items-center justify-between relative border border-white/40 cursor-pointer hover:shadow-md transform">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <p class="text-[10px] font-bold tracking-widest text-texto-oscuro/60 uppercase">No Asistirán</p>
+                    <span id="badge-no-asiste" class="bg-alerta-roja text-texto-oscuro text-[8px] font-bold px-2 py-0.5 rounded-full shadow-sm hidden uppercase tracking-wider">Activo</span>
+                </div>
+                <span class="text-4xl font-bold text-alerta-roja" id="stat-cancelados">0</span>
+            </div>
+            
+            <div class="w-14 h-14 bg-alerta-roja/20 rounded-2xl flex items-center justify-center text-alerta-roja mr-8 shadow-sm">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <div id="flecha-no-asiste" class="absolute top-5 right-5 text-texto-oscuro/30">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+        </div>
+
+        <div class="mb-6 flex items-center gap-3">
+            
+            <div class="relative flex-1 flex items-center">
+                <svg class="w-5 h-5 absolute left-4 text-texto-oscuro/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                
+                <input type="text" id="buscador" oninput="manejarBusqueda()" placeholder="Buscar invitado..." class="w-full bg-tarjeta rounded-full py-3.5 pl-12 pr-10 text-texto-oscuro focus:outline-none shadow-sm border border-white/50 focus:border-texto-oscuro/20 transition placeholder-texto-oscuro/40 text-[15px]">
+                
+                <button id="btn-borrar-busqueda" onclick="limpiarBusqueda()" class="absolute right-3 hidden text-texto-oscuro/30 hover:text-texto-oscuro/70 transition p-1 bg-texto-oscuro/5 rounded-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <button id="btn-orden" onclick="alternarOrden()" class="w-[52px] h-[52px] rounded-full bg-tarjeta shadow-sm border border-white/50 flex-shrink-0 flex items-center justify-center text-texto-oscuro hover:bg-white transition relative">
+                <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </button>
         </div>
 
-        <div id="card-asistentes" onclick="toggleFiltro('Asiste')" class="bg-[#E8CFCF] rounded-[35px] p-6 shadow-sm mb-4 flex justify-between items-center cursor-pointer transition transform active:scale-95 hover:shadow-md group relative border-4 border-transparent">
-            <svg class="absolute top-4 right-4 w-4 h-4 text-[#462F24] opacity-30 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
-            <div>
-                <p class="text-xs font-bold tracking-widest opacity-60 transition">TOTAL ASISTENTES</p>
-                <h2 class="text-5xl font-bold mt-1" id="contador-total">...</h2>
+        <div class="flex justify-between items-end mb-4 px-2">
+            <h2 class="font-bold text-lg text-texto-oscuro" id="titulo-lista">Registro de Invitados</h2>
+            <span class="text-[11px] font-semibold text-texto-oscuro/60" id="contador-resultados">0 encontrados</span>
+        </div>
+
+        <div id="lista-invitados" class="space-y-4">
+            <p class="text-center text-sm opacity-60 py-10">Cargando...</p>
+        </div>
+
+    </main>
+
+    <div id="modal-editar" class="fixed inset-0 bg-texto-oscuro/80 hidden z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity pb-0">
+        <div class="bg-tarjeta rounded-t-[35px] sm:rounded-[35px] w-full max-w-md p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+            
+            <div class="w-12 h-1.5 bg-texto-oscuro/20 rounded-full mx-auto mb-6 sm:hidden"></div>
+
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-bold text-xl text-texto-oscuro">Ajustar Registro</h2>
+                <button onclick="cerrarModal()" class="w-8 h-8 bg-fondo-app rounded-full flex items-center justify-center text-texto-oscuro hover:bg-alerta-roja transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <div class="mr-5 w-14 h-14 bg-[#F5E1E1] rounded-[20px] flex items-center justify-center text-[#462F24] transition group-hover:scale-110 shadow-sm">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            </div>
-        </div>
 
-        <div id="card-no-asistentes" onclick="toggleFiltro('No Asiste')" class="bg-[#FCEAEB] rounded-[30px] p-5 shadow-sm mb-6 flex justify-between items-center cursor-pointer transition transform active:scale-95 hover:shadow-md group relative border-4 border-transparent">
-            <svg class="absolute top-4 right-4 w-4 h-4 text-[#D98C8C] opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
-            <div>
-                <p class="text-[10px] font-bold tracking-widest opacity-60 transition">NO ASISTIRÁN (Lugares liberados)</p>
-                <h2 class="text-3xl font-bold mt-1 text-[#D98C8C]" id="contador-no-asiste">...</h2>
-            </div>
-            <div class="mr-4 w-12 h-12 bg-[#D98C8C]/20 rounded-[18px] flex items-center justify-center text-[#D98C8C] transition group-hover:scale-110">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </div>
-        </div>
-
-        <div class="relative mb-6">
-            <input type="text" id="search-input" onkeyup="renderizarLista()" placeholder="Buscar por nombre..." class="w-full bg-[#FDF7F4] rounded-full py-4 pl-12 pr-4 text-[#462F24] focus:outline-none shadow-sm placeholder-[#462F24]/50 transition border border-transparent focus:border-[#E8CFCF]">
-            <svg class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-[#462F24]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </div>
-
-        <div class="flex justify-between items-center mb-4 px-2">
-            <h3 id="titulo-lista" class="font-bold opacity-90 text-sm">Registro de Invitados</h3>
-            <p class="text-xs opacity-50" id="total-mostrados">...</p>
-        </div>
-        
-        <div id="lista-datos" class="space-y-3 pb-10">
-            <p class="text-sm text-center opacity-60">Cargando...</p>
-        </div>
-    </div>
-
-    <div id="modal-editar" class="fixed inset-0 bg-[#462F24]/60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#FCEAEB] rounded-[35px] w-full max-w-md p-6 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
-            <h2 class="font-bold text-lg mb-4 text-center">Editar Registro</h2>
-            <form id="form-editar" onsubmit="guardarEdicion(event)" class="space-y-4">
-                <input type="hidden" name="action" value="editar">
-                <input type="hidden" id="edit-fila" name="fila">
+            <form id="form-editar" class="space-y-4">
+                <input type="hidden" id="edit-fila">
                 
-                <input type="text" id="edit-nombre" name="nombre" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm" required placeholder="Nombre Principal">
-                
-                <select id="edit-estatus" name="estatus" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm">
-                    <option value="Asiste">Asiste</option>
-                    <option value="No Asiste">No Asiste</option>
-                </select>
-
-                <select id="edit-acompanantes" name="acompanantes" onchange="generarCamposAcompanantesEdit()" class="w-full bg-[#FDF7F4] rounded-2xl p-4 focus:outline-none shadow-sm">
-                    <option value="0">0 Acompañantes</option>
-                    <option value="1">1 Acompañante</option>
-                    <option value="2">2 Acompañantes</option>
-                    <option value="3">3 Acompañantes</option>
-                    <option value="4">4 Acompañantes</option>
-                    <option value="5">5 Acompañantes</option>
-                    <option value="6">6 Acompañantes</option>
-                    <option value="7">7 Acompañantes</option>
-                    <option value="8">8 Acompañantes</option>
-                    <option value="9">9 Acompañantes</option>
-                </select>
-                
-                <div id="edit-campos-dinamicos" class="space-y-3"></div>
-                
-                <textarea id="edit-notas" name="notas" class="w-full bg-[#FDF7F4] rounded-2xl p-4 h-24 focus:outline-none shadow-sm" placeholder="Notas..."></textarea>
-                
-                <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="history.back()" class="w-1/2 bg-[#E8CFCF] text-[#462F24] py-4 rounded-full font-bold shadow-sm opacity-80 hover:opacity-100">Cancelar</button>
-                    <button type="submit" id="btn-guardar-edicion" class="w-1/2 bg-[#E4BEB8] text-[#462F24] py-4 rounded-full font-bold shadow-sm hover:opacity-90">Guardar</button>
+                <div>
+                    <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Nombre Principal</label>
+                    <input type="text" id="edit-nombre" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
                 </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Estatus</label>
+                    <select id="edit-estatus" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
+                        <option value="Asiste">Sí Asistirá</option>
+                        <option value="No Asiste">No Asistirá</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Lugares Extras</label>
+                    <select id="edit-acompanantes" onchange="generarCamposAcompanantes()" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
+                        <option value="0">0 (Solo titular)</option>
+                        <option value="1">1 Extra</option>
+                        <option value="2">2 Extras</option>
+                        <option value="3">3 Extras</option>
+                        <option value="4">4 Extras</option>
+                        <option value="5">5 Extras</option>
+                        <option value="6">6 Extras</option>
+                        <option value="7">7 Extras</option>
+                        <option value="8">8 Extras</option>
+                        <option value="9">9 Extras</option>
+                    </select>
+                </div>
+
+                <div id="edit-nombres-acompanantes" class="space-y-2 bg-fondo-app/40 p-4 rounded-[20px] border border-white/50 hidden"></div>
+
+                <div>
+                    <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Notas (Alergias, etc)</label>
+                    <textarea id="edit-notas" class="w-full bg-white rounded-2xl p-4 h-24 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] text-texto-oscuro"></textarea>
+                </div>
+
+                <button type="button" id="btn-guardar-edicion" onclick="guardarEdicion()" class="w-full bg-texto-oscuro text-tarjeta font-bold py-4 rounded-3xl shadow-md hover:bg-texto-oscuro/90 transition mt-6 text-lg">
+                    Guardar Cambios
+                </button>
             </form>
         </div>
     </div>
@@ -96,191 +189,442 @@
     <script>
         // ⚠️ PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDAaQN5JrQp8-OS3SwbuhgP8PSZ4v0p8CsTHbWjeB65vdeSde0tCBy3adj9R6yffta/exec"; 
+        
         let datosGlobales = []; 
-        let filtroActual = 'Todos'; 
+        let ordenActual = 'registro';
+        let filtroEstatus = 'Todos'; 
+        let avataresAleatorios = []; 
+        const TONOS_ROSA = ['bg-[#FDF7F4]','bg-[#F9E0E0]','bg-[#F2D6D6]','bg-[#F5CACA]','bg-[#EFC2C2]'];
 
-        window.addEventListener('popstate', function(event) {
-            if (!event.state || !event.state.modal) {
-                document.getElementById('modal-editar').classList.add('hidden');
-            }
-        });
-
-        function toggleFiltro(tipo) {
-            if (filtroActual === tipo) filtroActual = 'Todos'; 
-            else filtroActual = tipo;
-            actualizarEstilosTarjetas();
-            renderizarLista();
-        }
-
-        function actualizarEstilosTarjetas() {
-            const cardAsistentes = document.getElementById('card-asistentes');
-            const cardNoAsistentes = document.getElementById('card-no-asistentes');
-            const tituloLista = document.getElementById('titulo-lista');
-            
-            cardAsistentes.classList.remove('border-white/60');
-            cardNoAsistentes.classList.remove('border-white/60');
-            cardAsistentes.classList.add('border-transparent');
-            cardNoAsistentes.classList.add('border-transparent');
-
-            if (filtroActual === 'Asiste') {
-                cardAsistentes.classList.remove('border-transparent');
-                cardAsistentes.classList.add('border-white/60'); 
-                tituloLista.innerText = "Mostrando: Solo Asistentes";
-            } else if (filtroActual === 'No Asiste') {
-                cardNoAsistentes.classList.remove('border-transparent');
-                cardNoAsistentes.classList.add('border-white/60');
-                tituloLista.innerText = "Mostrando: No Asistirán";
-            } else {
-                tituloLista.innerText = "Registro de Invitados";
-            }
-        }
-
-        function toggleDetalles(id) {
-            const detalles = document.getElementById('detalles-' + id);
-            const icono = document.getElementById('icono-' + id);
-            if (detalles.classList.contains('oculto')) {
-                detalles.classList.remove('oculto');
-                icono.style.transform = 'rotate(180deg)';
-            } else {
-                detalles.classList.add('oculto');
-                icono.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        async function actualizarListaAdmin() {
-            let contenedor = document.getElementById('lista-datos');
-            let contador = document.getElementById('contador-total');
-            let contadorNoAsiste = document.getElementById('contador-no-asiste');
-            contenedor.innerHTML = '<p class="text-sm text-center opacity-60 py-8">Actualizando...</p>';
-
+        async function cargarDatos() {
+            document.getElementById('lista-invitados').innerHTML = '<p class="text-center text-sm opacity-60 py-10 font-bold animate-pulse">Sincronizando registros...</p>';
             try {
                 let res = await fetch(SCRIPT_URL);
                 datosGlobales = await res.json();
                 
-                let totalAsistentes = 0;
-                let totalNoAsistentes = 0;
+                let confirmados = datosGlobales.filter(i => i.estatus === 'Asiste');
+                avataresAleatorios = [...confirmados].sort(() => 0.5 - Math.random()).slice(0, 3);
+                
+                renderizarPantalla();
+            } catch (error) {
+                document.getElementById('lista-invitados').innerHTML = '<p class="text-center text-sm text-alerta-roja font-bold py-10">Error de conexión. Intenta recargar.</p>';
+            }
+        }
 
-                datosGlobales.forEach((invitado) => {
-                    if(invitado.estatus === 'Asiste') totalAsistentes += invitado.totalPersonas;
-                    else totalNoAsistentes += invitado.totalPersonas;
+        // 🟢 NOTA: LÓGICA DE DESCARGA EXCEL (CSV COMPATIBLE CON EXCEL)
+        function descargarExcel() {
+            // Filtramos solo a los que asisten
+            let asisten = datosGlobales.filter(i => i.estatus === 'Asiste');
+            
+            if(asisten.length === 0) {
+                alert("No hay asistentes confirmados para descargar.");
+                return;
+            }
+
+            // Añadimos el BOM (\uFEFF) para que Excel lea los acentos y ñ correctamente
+            let csvContent = "\uFEFF"; 
+            
+            // Cabeceras
+            csvContent += "Nombre del Titular,Lugares Reservados,Nombres de Acompanantes,Notas Adicionales\n";
+
+            asisten.forEach(inv => {
+                let titular = `"${inv.nombre.replace(/"/g, '""')}"`;
+                let lugares = inv.totalPersonas;
+                
+                let acompanantesStr = "";
+                if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
+                    acompanantesStr = inv.nombresAcompanantes.filter(n=>n).join(" | ");
+                } else if(inv.acompanantesNumero > 0) {
+                    acompanantesStr = `+${inv.acompanantesNumero} invitado(s) sin nombre`;
+                }
+                let acompanantes = `"${acompanantesStr.replace(/"/g, '""')}"`;
+                
+                let notas = `"${(inv.notas || "").replace(/"/g, '""')}"`;
+
+                // Construimos la fila
+                csvContent += `${titular},${lugares},${acompanantes},${notas}\n`;
+            });
+
+            // Crear y forzar descarga
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.setAttribute("download", "Lista_Asistentes_XV_Hanna.csv");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 🟢 NOTA: LÓGICA DE PULL TO REFRESH
+        let startY = 0;
+        let currentY = 0;
+        let isPulling = false;
+        const ptrIndicator = document.getElementById('pull-to-refresh');
+        const ptrIcon = document.getElementById('ptr-icon');
+        const ptrText = document.getElementById('ptr-text');
+
+        document.addEventListener('touchstart', e => {
+            if (window.scrollY === 0) { // Solo si estamos hasta arriba
+                startY = e.touches[0].clientY;
+                isPulling = true;
+                ptrIcon.style.transform = 'rotate(0deg)';
+                ptrText.innerText = "Desliza para actualizar...";
+            }
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (!isPulling) return;
+            currentY = e.touches[0].clientY;
+            let pullDistance = currentY - startY;
+            
+            if (pullDistance > 0) {
+                // Prevenir comportamiento por defecto para que no interfiera el pull del navegador
+                if(e.cancelable) e.preventDefault(); 
+                
+                let alturaVisible = Math.min(pullDistance / 2, 70); // Ralentiza el tirón
+                ptrIndicator.style.height = alturaVisible + 'px';
+                
+                if (alturaVisible >= 60) {
+                    ptrIcon.style.transform = 'rotate(180deg)';
+                    ptrText.innerText = "Suelta para actualizar";
+                } else {
+                    ptrIcon.style.transform = 'rotate(0deg)';
+                    ptrText.innerText = "Desliza para actualizar...";
+                }
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', e => {
+            if (!isPulling) return;
+            isPulling = false;
+            let pullDistance = currentY - startY;
+            
+            if (pullDistance / 2 >= 60) {
+                // Accionamos la recarga
+                ptrIndicator.style.height = '50px';
+                ptrIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>'; // Cambia a icono refresh
+                ptrIcon.classList.add('animate-spin');
+                ptrText.innerText = "Actualizando...";
+                
+                cargarDatos().then(() => {
+                    setTimeout(() => {
+                        ptrIndicator.style.height = '0px';
+                        setTimeout(() => {
+                            ptrIcon.classList.remove('animate-spin');
+                            ptrIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>';
+                        }, 200);
+                    }, 500); // Pequeña pausa para que el usuario vea que terminó
+                });
+            } else {
+                // Cancelamos
+                ptrIndicator.style.height = '0px';
+            }
+            startY = 0;
+            currentY = 0;
+        });
+
+        // Funciones estándar
+        function manejarBusqueda() {
+            let input = document.getElementById('buscador').value;
+            let btnX = document.getElementById('btn-borrar-busqueda');
+            if (input.length > 0) btnX.classList.remove('hidden');
+            else btnX.classList.add('hidden');
+            renderizarPantalla();
+        }
+
+        function limpiarBusqueda() {
+            document.getElementById('buscador').value = '';
+            document.getElementById('btn-borrar-busqueda').classList.add('hidden');
+            renderizarPantalla();
+        }
+
+        function filtrarPorEstatus(estatus) {
+            if(filtroEstatus === estatus) filtroEstatus = 'Todos';
+            else filtroEstatus = estatus;
+            renderizarPantalla();
+        }
+
+        function alternarOrden() {
+            const btn = document.getElementById('btn-orden');
+            if (ordenActual === 'registro') {
+                ordenActual = 'alfabetico';
+                btn.innerHTML = '<span class="font-black text-[15px] opacity-70 tracking-tighter">A-Z</span>';
+            } else {
+                ordenActual = 'registro';
+                btn.innerHTML = '<svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            }
+            renderizarPantalla();
+        }
+
+        function toggleDetalles(fila) {
+            const contenedor = document.getElementById(`detalles-${fila}`);
+            const flecha = document.getElementById(`flecha-${fila}`);
+            
+            if (contenedor.style.maxHeight && contenedor.style.maxHeight !== '0px') {
+                contenedor.style.maxHeight = '0px';
+                contenedor.style.opacity = '0';
+                flecha.style.transform = 'rotate(0deg)';
+                setTimeout(() => contenedor.classList.add('hidden'), 300); 
+            } else {
+                contenedor.classList.remove('hidden');
+                setTimeout(() => {
+                    contenedor.style.maxHeight = contenedor.scrollHeight + "px";
+                    contenedor.style.opacity = '1';
+                    flecha.style.transform = 'rotate(180deg)';
+                }, 10);
+            }
+        }
+
+        function renderizarPantalla() {
+            let terminoBusqueda = document.getElementById('buscador').value.toLowerCase();
+            let listaHTML = '';
+            
+            let totalPersonasAsisten = 0;
+            let totalCancelados = 0;
+
+            datosGlobales.forEach(inv => {
+                if (inv.estatus === 'Asiste') totalPersonasAsisten += inv.totalPersonas;
+                else totalCancelados += 1;
+            });
+
+            let avataresHTML = '';
+            if(avataresAleatorios.length > 0) {
+                let zIndexes = ['z-30', 'z-20', 'z-10'];
+                avataresAleatorios.forEach((inv, i) => {
+                    let inicial = inv.nombre.substring(0,1).toUpperCase();
+                    let colorTarjeta = TONOS_ROSA[i % TONOS_ROSA.length];
+                    avataresHTML += `
+                        <div class="w-8 h-8 rounded-full border-[3px] border-tarjeta-fuerte ${colorTarjeta} flex items-center justify-center text-[11px] font-bold text-texto-oscuro shadow-sm relative ${zIndexes[i]}">
+                            ${inicial}
+                        </div>
+                    `;
                 });
                 
-                contador.innerText = totalAsistentes;
-                contadorNoAsiste.innerText = totalNoAsistentes;
-                
-                renderizarLista(); 
-
-            } catch (e) {
-                contenedor.innerHTML = '<p class="text-red-500 text-center text-sm py-8">Error de conexión.</p>';
+                if(totalPersonasAsisten > avataresAleatorios.length) {
+                    let extras = totalPersonasAsisten - avataresAleatorios.length;
+                    avataresHTML += `
+                        <div class="w-8 h-8 rounded-full border-[3px] border-tarjeta-fuerte bg-white flex items-center justify-center text-[10px] font-extrabold text-texto-oscuro shadow-sm relative z-0">
+                            +${extras}
+                        </div>
+                    `;
+                }
+                avataresHTML += `<span class="text-[11px] font-bold text-texto-oscuro/60 ml-3 tracking-widest uppercase">Confirmados</span>`;
             }
-        }
+            document.getElementById('avatares-confirmados').innerHTML = avataresHTML;
 
-        function renderizarLista() {
-            let contenedor = document.getElementById('lista-datos');
-            let textoBusqueda = document.getElementById('search-input').value.toLowerCase();
-            contenedor.innerHTML = "";
-            let mostrados = 0;
+            let datosFiltrados = datosGlobales.filter(inv => {
+                let coincideTitular = inv.nombre.toLowerCase().includes(terminoBusqueda);
+                let coincideAcompanante = inv.nombresAcompanantes ? inv.nombresAcompanantes.some(nom => nom && nom.toLowerCase().includes(terminoBusqueda)) : false;
+                return coincideTitular || coincideAcompanante;
+            });
 
-            datosGlobales.forEach((invitado, index) => {
-                if (filtroActual !== "Todos" && invitado.estatus !== filtroActual) return;
-                if (!invitado.nombre.toLowerCase().includes(textoBusqueda)) return;
+            if (filtroEstatus !== 'Todos') datosFiltrados = datosFiltrados.filter(inv => inv.estatus === filtroEstatus);
+
+            if (ordenActual === 'alfabetico') datosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+            else datosFiltrados.sort((a, b) => a.fila - b.fila);
+
+            const cardAsiste = document.getElementById('card-asiste');
+            const cardNoAsiste = document.getElementById('card-no-asiste');
+            const badgeAsiste = document.getElementById('badge-asiste');
+            const badgeNoAsiste = document.getElementById('badge-no-asiste');
+            const flechaAsiste = document.getElementById('flecha-asiste');
+            const flechaNoAsiste = document.getElementById('flecha-no-asiste');
+            const tituloLista = document.getElementById('titulo-lista');
+
+            if (filtroEstatus === 'Asiste') {
+                cardAsiste.classList.add('ring-4', 'ring-white/60');
+                cardAsiste.classList.remove('opacity-50', 'scale-[0.98]');
+                badgeAsiste.classList.remove('hidden');
+                flechaAsiste.classList.add('hidden');
+
+                cardNoAsiste.classList.add('opacity-50', 'scale-[0.98]');
+                cardNoAsiste.classList.remove('ring-4', 'ring-white/60');
+                badgeNoAsiste.classList.add('hidden');
+                flechaNoAsiste.classList.remove('hidden');
                 
-                mostrados++;
-                let esAsistente = invitado.estatus === 'Asiste';
+                tituloLista.innerText = "Confirmados (Sí Asisten)";
+            } else if (filtroEstatus === 'No Asiste') {
+                cardNoAsiste.classList.add('ring-4', 'ring-white/60');
+                cardNoAsiste.classList.remove('opacity-50', 'scale-[0.98]');
+                badgeNoAsiste.classList.remove('hidden');
+                flechaNoAsiste.classList.add('hidden');
+
+                cardAsiste.classList.add('opacity-50', 'scale-[0.98]');
+                cardAsiste.classList.remove('ring-4', 'ring-white/60');
+                badgeAsiste.classList.add('hidden');
+                flechaAsiste.classList.remove('hidden');
                 
-                // Iconos de estatus (Fondo de color con icono crema)
-                let estatusIcon = esAsistente 
-                    ? `<div class="w-6 h-6 rounded-full bg-[#E4BEB8] flex items-center justify-center text-[#FDF7F4] shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>`
-                    : `<div class="w-6 h-6 rounded-full bg-[#D98C8C] flex items-center justify-center text-[#FDF7F4] shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
+                tituloLista.innerText = "Cancelados (No Asistirán)";
+            } else {
+                cardAsiste.classList.remove('opacity-50', 'scale-[0.98]', 'ring-4', 'ring-white/60');
+                cardNoAsiste.classList.remove('opacity-50', 'scale-[0.98]', 'ring-4', 'ring-white/60');
+                badgeAsiste.classList.add('hidden');
+                badgeNoAsiste.classList.add('hidden');
+                flechaAsiste.classList.remove('hidden');
+                flechaNoAsiste.classList.remove('hidden');
+                
+                tituloLista.innerText = "Registro de Invitados";
+            }
 
-                // Círculo de iniciales: Verde/Rosa con 70% de opacidad
-                let bgInicial = esAsistente ? 'bg-[#C8D1C5]/70' : 'bg-[#D98C8C]/70';
+            datosFiltrados.forEach(inv => {
+                let asiste = inv.estatus === 'Asiste';
+                let inicial = inv.nombre.substring(0,1).toUpperCase();
+                
+                let bgIconoStatus = asiste ? 'bg-tarjeta-fuerte' : 'bg-alerta-roja';
+                let colorIconoStatus = 'text-texto-oscuro';
+                let svgStatus = asiste 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>' 
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M6 18L18 6M6 6l12 12"></path>';
+                
+                let bgAvatar = asiste ? 'bg-acento-verde/40' : 'bg-texto-oscuro/5';
+                let opacidadGeneral = asiste ? 'opacity-100' : 'opacity-70';
 
-                let listaAcompHTML = "";
-                if(invitado.nombresAcompanantes.length > 0) {
-                    listaAcompHTML = "<ul class='list-disc pl-5 mt-2 text-xs opacity-80 space-y-1'>";
-                    invitado.nombresAcompanantes.forEach(nom => { listaAcompHTML += `<li>${nom}</li>`; });
-                    listaAcompHTML += "</ul>";
+                let listaAcompHTML = '';
+                if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
+                    inv.nombresAcompanantes.forEach(nom => {
+                        let resaltado = (terminoBusqueda !== "" && nom.toLowerCase().includes(terminoBusqueda)) ? 'bg-white px-2 py-0.5 rounded-md shadow-sm' : '';
+                        listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro"><span class="${resaltado}">• ${nom}</span></li>`;
+                    });
+                } else if(inv.acompanantesNumero > 0) {
+                    listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro">• ${inv.acompanantesNumero} acompañante(s) sin nombre</li>`;
+                } else {
+                    listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro italic">Sin acompañantes</li>`;
                 }
 
-                contenedor.innerHTML += `
-                    <div class="bg-[#FCEAEB] rounded-[40px] p-3 pr-5 shadow-sm transition hover:shadow-md border border-white/40">
-                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetalles(${index})">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 rounded-full ${bgInicial} flex items-center justify-center font-bold mr-4 text-lg text-[#462F24] shadow-sm">
-                                    ${invitado.nombre.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                    <h4 class="font-bold leading-tight text-base text-[#462F24]">${invitado.nombre}</h4>
-                                    <p class="text-[11px] opacity-60 mt-0.5">${invitado.totalPersonas} Persona(s)</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center space-x-2">
-                                ${estatusIcon}
-                                <svg id="icono-${index}" class="w-5 h-5 opacity-40 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
-                        
-                        <div id="detalles-${index}" class="oculto mt-4 pt-4 border-t border-[#E8CFCF]/40">
-                            <p class="text-[10px] font-bold tracking-widest opacity-60 mb-2 pl-2">DETALLES:</p>
-                            ${listaAcompHTML}
-                            ${invitado.notas ? `<div class="mt-3 p-3 bg-white/50 rounded-2xl text-xs italic opacity-80 shadow-sm">"${invitado.notas}"</div>` : ''}
-                            
-                            <button onclick="abrirModalEditar(${index})" class="mt-4 w-full flex justify-center items-center text-xs font-bold text-[#462F24] hover:bg-white transition py-3 rounded-full bg-[#FDF7F4] shadow-sm border border-transparent">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                Editar Registro
-                            </button>
-                        </div>
-                    </div>`;
-            });
-            
-            document.getElementById('total-mostrados').innerText = `${mostrados} encontrados`;
+                let notasHTML = '';
+                if(inv.notas && inv.notas.trim() !== '') {
+                    notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1"><p class="text-[13px] italic text-texto-oscuro/80">"${inv.notas}"</p></div>`;
+                }
 
-            if(mostrados === 0) {
-                contenedor.innerHTML = '<div class="flex flex-col items-center justify-center py-10 opacity-50"><svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p class="text-sm">No se encontraron resultados.</p></div>';
+                listaHTML += `
+                    <div class="bg-tarjeta rounded-[45px] shadow-sm border border-white/60 p-4 transition-all duration-300 ${opacidadGeneral}">
+                        
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetalles(${inv.fila})">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-full ${bgAvatar} flex items-center justify-center shadow-inner border border-white/80 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-texto-oscuro">${inicial}</span>
+                                </div>
+                                <div class="max-w-[140px] xs:max-w-[180px]">
+                                    <h3 class="font-bold text-[16px] text-texto-oscuro leading-tight truncate">${inv.nombre}</h3>
+                                    <p class="text-[12px] text-texto-oscuro/60 font-semibold mt-0.5">${inv.totalPersonas} Persona(s)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3 mr-2">
+                                <div class="w-7 h-7 rounded-full ${bgIconoStatus} flex items-center justify-center shadow-md border border-white/20">
+                                    <svg class="w-4 h-4 ${colorIconoStatus}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${svgStatus}</svg>
+                                </div>
+                                <svg id="flecha-${inv.fila}" class="w-5 h-5 text-texto-oscuro/40 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+
+                        <div id="detalles-${inv.fila}" class="hidden expand-transition mt-4" style="max-height: 0px; opacity: 0;">
+                            <div class="pt-4 border-t border-texto-oscuro/5 mx-2">
+                                <p class="text-[10px] font-bold tracking-widest text-texto-oscuro/60 mb-2 uppercase ml-1">Detalles:</p>
+                                <ul class="mb-4">
+                                    ${listaAcompHTML}
+                                </ul>
+                                ${notasHTML}
+                                
+                                <button onclick="abrirModal(${inv.fila})" class="w-full bg-fondo-app border border-white text-texto-oscuro font-bold py-3.5 rounded-[25px] shadow-sm flex justify-center items-center gap-2 hover:bg-white transition text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    Editar Registro
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            });
+
+            if (datosFiltrados.length === 0) {
+                listaHTML = '<p class="text-center text-sm opacity-60 py-10 font-bold">No se encontraron invitados.</p>';
             }
+
+            document.getElementById('lista-invitados').innerHTML = listaHTML;
+            document.getElementById('stat-total-personas').innerText = totalPersonasAsisten;
+            document.getElementById('stat-cancelados').innerText = totalCancelados;
+            document.getElementById('contador-resultados').innerText = `${datosFiltrados.length} encontrados`;
         }
 
-        function abrirModalEditar(index) {
-            let inv = datosGlobales[index];
+        function abrirModal(fila) {
+            let inv = datosGlobales.find(i => i.fila === fila);
+            if (!inv) return;
+
             document.getElementById('edit-fila').value = inv.fila;
             document.getElementById('edit-nombre').value = inv.nombre;
-            document.getElementById('edit-estatus').value = inv.estatus;
-            document.getElementById('edit-notas').value = inv.notas;
-            document.getElementById('edit-acompanantes').value = inv.acompanantesNumero;
-            
-            generarCamposAcompanantesEdit(inv.nombresAcompanantes);
-            
-            window.history.pushState({ modal: true }, '', '#editar');
+            document.getElementById('edit-estatus').value = inv.estatus || 'Asiste';
+            document.getElementById('edit-acompanantes').value = inv.acompanantesNumero || 0;
+            document.getElementById('edit-notas').value = inv.notas || '';
+
+            window.nombresTemp = inv.nombresAcompanantes || [];
+            generarCamposAcompanantes();
+
             document.getElementById('modal-editar').classList.remove('hidden');
         }
 
-        function generarCamposAcompanantesEdit(nombresPrevios = []) {
-            let num = parseInt(document.getElementById('edit-acompanantes').value);
-            let div = document.getElementById('edit-campos-dinamicos');
-            div.innerHTML = '';
-            for(let i = 1; i <= num; i++) {
-                let valor = nombresPrevios[i-1] ? nombresPrevios[i-1] : "";
-                div.innerHTML += `<input type="text" name="c${i}" value="${valor}" class="w-full bg-[#FDF7F4] rounded-2xl p-3 text-sm focus:outline-none shadow-sm" placeholder="Nombre Acompañante ${i}">`;
+        function cerrarModal() {
+            document.getElementById('modal-editar').classList.add('hidden');
+        }
+
+        function generarCamposAcompanantes() {
+            let num = parseInt(document.getElementById('edit-acompanantes').value) || 0;
+            let contenedor = document.getElementById('edit-nombres-acompanantes');
+            contenedor.innerHTML = '';
+
+            if (num > 0) {
+                contenedor.classList.remove('hidden');
+                for (let i = 1; i <= num; i++) {
+                    let valorPrevio = window.nombresTemp[i-1] || '';
+                    contenedor.innerHTML += `
+                        <div class="mb-2">
+                            <label class="block text-[9px] font-bold opacity-60 ml-1 mb-1 uppercase">ACOMPAÑANTE ${i}</label>
+                            <input type="text" id="edit-c${i}" value="${valorPrevio}" class="w-full bg-white rounded-xl p-3 focus:outline-none text-sm border border-white/50 focus:border-texto-oscuro/20 shadow-sm" placeholder="Nombre completo...">
+                        </div>
+                    `;
+                }
+            } else {
+                contenedor.classList.add('hidden');
             }
         }
 
-        function guardarEdicion(e) {
-            e.preventDefault();
-            let btn = document.getElementById('btn-guardar-edicion');
-            btn.innerText = "Guardando..."; btn.disabled = true;
+        function guardarEdicion() {
+            const btn = document.getElementById('btn-guardar-edicion');
+            btn.innerText = "Guardando...";
+            btn.classList.add("opacity-50");
+            btn.disabled = true;
 
-            fetch(SCRIPT_URL, { method: 'POST', body: new FormData(e.target) })
-            .then(() => {
-                window.history.back(); 
-                actualizarListaAdmin(); 
+            let formData = new FormData();
+            formData.append("action", "editar");
+            formData.append("fila", document.getElementById('edit-fila').value);
+            formData.append("nombre", document.getElementById('edit-nombre').value);
+            formData.append("estatus", document.getElementById('edit-estatus').value);
+            formData.append("notas", document.getElementById('edit-notas').value);
+            
+            let numAcomp = document.getElementById('edit-acompanantes').value;
+            formData.append("acompanantes", numAcomp);
+            
+            for(let i=1; i<=numAcomp; i++) {
+                let nombreAcomp = document.getElementById(`edit-c${i}`).value;
+                formData.append(`c${i}`, nombreAcomp);
+            }
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.text())
+            .then(texto => {
+                cerrarModal();
+                cargarDatos(); 
             })
-            .catch(() => alert("Error al editar."))
-            .finally(() => { btn.innerText = "Guardar"; btn.disabled = false; });
+            .catch(error => alert("Error al guardar. Revisa tu internet."))
+            .finally(() => {
+                btn.innerText = "Guardar Cambios";
+                btn.classList.remove("opacity-50");
+                btn.disabled = false;
+            });
         }
 
-        window.onload = actualizarListaAdmin;
+        window.onload = cargarDatos;
     </script>
 </body>
 </html>
