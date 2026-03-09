@@ -178,7 +178,6 @@
                 let res = await fetch(SCRIPT_URL);
                 datosGlobales = await res.json();
                 
-                // 🟢 BLINDAJE: Filtramos filas completamente en blanco
                 let confirmados = datosGlobales.filter(i => i.estatus === 'Asiste' && String(i.nombre || "").trim() !== "");
                 avataresAleatorios = [...confirmados].sort(() => 0.5 - Math.random()).slice(0, 3);
                 
@@ -333,7 +332,6 @@
             let totalPersonasAsisten = 0;
             let totalCancelados = 0;
 
-            // Filtramos las filas vacías que Google Sheets pudiera enviar
             let datosValidos = datosGlobales.filter(inv => String(inv.nombre || "").trim() !== "");
 
             datosValidos.forEach(inv => {
@@ -341,7 +339,6 @@
                 else totalCancelados += 1;
             });
 
-            // Avatares
             let avataresHTML = '';
             if(avataresAleatorios.length > 0) {
                 let zIndexes = ['z-30', 'z-20', 'z-10'];
@@ -366,7 +363,6 @@
             }
             document.getElementById('avatares-confirmados').innerHTML = avataresHTML;
 
-            // 🟢 BLINDAJE EN LA BÚSQUEDA MATEMÁTICA PARA EVITAR ERRORES
             let datosFiltrados = datosValidos.filter(inv => {
                 let nombreLimpio = String(inv.nombre || "").toLowerCase();
                 let coincideTitular = nombreLimpio.includes(terminoBusqueda);
@@ -386,7 +382,6 @@
                 datosFiltrados.sort((a, b) => a.fila - b.fila);
             }
 
-            // Cambios visuales de Tarjetas
             const cardAsiste = document.getElementById('card-asiste');
             const cardNoAsiste = document.getElementById('card-no-asiste');
             const badgeAsiste = document.getElementById('badge-asiste');
@@ -440,6 +435,17 @@
                 let bgAvatar = asiste ? 'bg-acento-verde/40' : 'bg-texto-oscuro/5';
                 let opacidadGeneral = asiste ? 'opacity-100' : 'opacity-70';
 
+                // 🟢 NOTA: LÓGICA DEL INDICADOR DE NOTAS EN LA TARJETA COLAPSADA
+                let indicadorNota = '';
+                let notaTexto = String(inv.notas || "").trim();
+                if(notaTexto !== '') {
+                    // Globito de mensaje súper sutil
+                    indicadorNota = `
+                        <div title="Tiene nota" class="bg-fondo-app rounded-full p-1 ml-1.5 shadow-sm border border-white/50">
+                            <svg class="w-2.5 h-2.5 text-texto-oscuro/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        </div>`;
+                }
+
                 let listaAcompHTML = '';
                 if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
                     inv.nombresAcompanantes.forEach(nom => {
@@ -454,13 +460,13 @@
                 }
 
                 let notasHTML = '';
-                let notaTexto = String(inv.notas || "").trim();
                 if(notaTexto !== '') {
-                    notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1"><p class="text-[13px] italic text-texto-oscuro/80">"${notaTexto}"</p></div>`;
+                    notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1 border border-white/50"><p class="text-[13px] italic text-texto-oscuro/80">"${notaTexto}"</p></div>`;
                 }
 
                 listaHTML += `
                     <div class="bg-tarjeta rounded-[45px] shadow-sm border border-white/60 p-4 transition-all duration-300 ${opacidadGeneral}">
+                        
                         <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetalles(${inv.fila})">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-full ${bgAvatar} flex items-center justify-center shadow-inner border border-white/80 flex-shrink-0">
@@ -468,9 +474,14 @@
                                 </div>
                                 <div class="max-w-[140px] xs:max-w-[180px]">
                                     <h3 class="font-bold text-[16px] text-texto-oscuro leading-tight truncate">${inv.nombre}</h3>
-                                    <p class="text-[12px] text-texto-oscuro/60 font-semibold mt-0.5">${inv.totalPersonas} Persona(s)</p>
+                                    
+                                    <div class="flex items-center mt-0.5">
+                                        <p class="text-[12px] text-texto-oscuro/60 font-semibold">${inv.totalPersonas} Persona(s)</p>
+                                        ${indicadorNota}
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div class="flex items-center gap-3 mr-2">
                                 <div class="w-7 h-7 rounded-full ${bgIconoStatus} flex items-center justify-center shadow-md border border-white/20">
                                     <svg class="w-4 h-4 ${colorIconoStatus}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${svgStatus}</svg>
@@ -478,17 +489,27 @@
                                 <svg id="flecha-${inv.fila}" class="w-5 h-5 text-texto-oscuro/40 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
+
                         <div id="detalles-${inv.fila}" class="hidden expand-transition mt-4" style="max-height: 0px; opacity: 0;">
                             <div class="pt-4 border-t border-texto-oscuro/5 mx-2">
-                                <p class="text-[10px] font-bold tracking-widest text-texto-oscuro/60 mb-2 uppercase ml-1">Detalles:</p>
-                                <ul class="mb-4">${listaAcompHTML}</ul>
+                                <p class="text-[10px] font-bold tracking-widest text-texto-oscuro/60 mb-2 uppercase ml-1">Detalles de la familia:</p>
+                                
+                                <div class="mb-2 ml-1">
+                                    <p class="text-[13px] font-bold text-texto-oscuro">Titular: <span class="font-medium opacity-90">${inv.nombre}</span></p>
+                                </div>
+
+                                <ul class="mb-4">
+                                    ${listaAcompHTML}
+                                </ul>
                                 ${notasHTML}
+                                
                                 <button onclick="abrirModal(${inv.fila})" class="w-full bg-fondo-app border border-white text-texto-oscuro font-bold py-3.5 rounded-[25px] shadow-sm flex justify-center items-center gap-2 hover:bg-white transition text-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     Editar Registro
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 `;
             });
