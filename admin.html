@@ -14,12 +14,12 @@
             theme: {
                 extend: {
                     colors: {
-                        "fondo-app": "#F5E1E1",     // Rosa base del fondo
-                        "tarjeta": "#FDF5F5",       // Rosa súper claro/casi blanco
-                        "tarjeta-fuerte": "#EAC6C6",// Rosa oscuro
-                        "texto-oscuro": "#4A3B3B",  // Texto oscuro / Café grisáceo
-                        "acento-verde": "#D5E3D1",  // Verde pastel
-                        "alerta-roja": "#E8B4B4",   // Rosa/Rojo suave
+                        "fondo-app": "#F5E1E1",     
+                        "tarjeta": "#FDF5F5",       
+                        "tarjeta-fuerte": "#EAC6C6",
+                        "texto-oscuro": "#4A3B3B",  
+                        "acento-verde": "#D5E3D1",  
+                        "alerta-roja": "#E8B4B4",   
                     },
                     fontFamily: { "sans": ["Segoe UI", "sans-serif"] }
                 }
@@ -30,10 +30,9 @@
     <style>
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        body { min-height: 100dvh; overflow-x: hidden; overscroll-behavior-y: contain; } /* overscroll-behavior evita el refresh nativo doble del navegador */
+        body { min-height: 100dvh; overflow-x: hidden; overscroll-behavior-y: contain; } 
         .expand-transition { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
         .filter-transition { transition: all 0.3s ease; }
-        /* Animación para el Pull to Refresh */
         #pull-to-refresh { transition: height 0.2s ease-out; }
     </style>
 </head>
@@ -47,12 +46,10 @@
 
     <header class="flex items-center justify-between px-6 pt-6 pb-4 relative z-20">
         <h1 class="text-2xl font-extrabold text-texto-oscuro">Panel Organizador</h1>
-        
         <div class="flex items-center gap-2">
             <button onclick="descargarExcel()" class="w-10 h-10 rounded-full border border-texto-oscuro/10 flex items-center justify-center hover:bg-white/50 transition shadow-sm text-texto-oscuro bg-tarjeta/40" title="Descargar Asistentes">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </button>
-            
             <button onclick="cargarDatos()" class="w-10 h-10 rounded-full border border-texto-oscuro/10 flex items-center justify-center hover:bg-white/50 transition shadow-sm text-texto-oscuro bg-tarjeta/40" title="Actualizar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
@@ -62,7 +59,6 @@
     <main class="px-5 pb-10">
         
         <div id="card-asiste" onclick="filtrarPorEstatus('Asiste')" class="filter-transition bg-tarjeta-fuerte rounded-[40px] p-8 shadow-sm mb-4 relative overflow-hidden min-h-[190px] flex flex-col justify-center cursor-pointer hover:shadow-md transform">
-            
             <div class="flex items-center gap-2 mb-2">
                 <p class="text-[12px] font-bold tracking-widest text-texto-oscuro/70 uppercase">Total Asistentes</p>
                 <span id="badge-asiste" class="bg-white text-texto-oscuro text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm hidden uppercase tracking-wider">Activo</span>
@@ -75,9 +71,7 @@
                 </div>
             </div>
 
-            <div id="avatares-confirmados" class="mt-4 flex items-center -space-x-2 relative z-10">
-                </div>
-
+            <div id="avatares-confirmados" class="mt-4 flex items-center -space-x-2 relative z-10"></div>
             <div id="flecha-asiste" class="absolute top-7 right-7 text-texto-oscuro/40">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
             </div>
@@ -101,17 +95,13 @@
         </div>
 
         <div class="mb-6 flex items-center gap-3">
-            
             <div class="relative flex-1 flex items-center">
                 <svg class="w-5 h-5 absolute left-4 text-texto-oscuro/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                
                 <input type="text" id="buscador" oninput="manejarBusqueda()" placeholder="Buscar invitado..." class="w-full bg-tarjeta rounded-full py-3.5 pl-12 pr-10 text-texto-oscuro focus:outline-none shadow-sm border border-white/50 focus:border-texto-oscuro/20 transition placeholder-texto-oscuro/40 text-[15px]">
-                
                 <button id="btn-borrar-busqueda" onclick="limpiarBusqueda()" class="absolute right-3 hidden text-texto-oscuro/30 hover:text-texto-oscuro/70 transition p-1 bg-texto-oscuro/5 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <button id="btn-orden" onclick="alternarOrden()" class="w-[52px] h-[52px] rounded-full bg-tarjeta shadow-sm border border-white/50 flex-shrink-0 flex items-center justify-center text-texto-oscuro hover:bg-white transition relative">
                 <svg class="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </button>
@@ -125,29 +115,23 @@
         <div id="lista-invitados" class="space-y-4">
             <p class="text-center text-sm opacity-60 py-10">Cargando...</p>
         </div>
-
     </main>
 
     <div id="modal-editar" class="fixed inset-0 bg-texto-oscuro/80 hidden z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity pb-0">
         <div class="bg-tarjeta rounded-t-[35px] sm:rounded-[35px] w-full max-w-md p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
-            
             <div class="w-12 h-1.5 bg-texto-oscuro/20 rounded-full mx-auto mb-6 sm:hidden"></div>
-
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-bold text-xl text-texto-oscuro">Ajustar Registro</h2>
                 <button onclick="cerrarModal()" class="w-8 h-8 bg-fondo-app rounded-full flex items-center justify-center text-texto-oscuro hover:bg-alerta-roja transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <form id="form-editar" class="space-y-4">
                 <input type="hidden" id="edit-fila">
-                
                 <div>
                     <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Nombre Principal</label>
                     <input type="text" id="edit-nombre" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
                 </div>
-
                 <div>
                     <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Estatus</label>
                     <select id="edit-estatus" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
@@ -155,30 +139,22 @@
                         <option value="No Asiste">No Asistirá</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Lugares Extras</label>
                     <select id="edit-acompanantes" onchange="generarCamposAcompanantes()" class="w-full bg-white rounded-2xl p-4 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] font-semibold text-texto-oscuro">
                         <option value="0">0 (Solo titular)</option>
-                        <option value="1">1 Extra</option>
-                        <option value="2">2 Extras</option>
-                        <option value="3">3 Extras</option>
-                        <option value="4">4 Extras</option>
-                        <option value="5">5 Extras</option>
-                        <option value="6">6 Extras</option>
-                        <option value="7">7 Extras</option>
-                        <option value="8">8 Extras</option>
+                        <option value="1">1 Extra</option><option value="2">2 Extras</option>
+                        <option value="3">3 Extras</option><option value="4">4 Extras</option>
+                        <option value="5">5 Extras</option><option value="6">6 Extras</option>
+                        <option value="7">7 Extras</option><option value="8">8 Extras</option>
                         <option value="9">9 Extras</option>
                     </select>
                 </div>
-
                 <div id="edit-nombres-acompanantes" class="space-y-2 bg-fondo-app/40 p-4 rounded-[20px] border border-white/50 hidden"></div>
-
                 <div>
                     <label class="block text-[10px] font-bold tracking-wider mb-1 opacity-60 uppercase ml-1">Notas (Alergias, etc)</label>
                     <textarea id="edit-notas" class="w-full bg-white rounded-2xl p-4 h-24 focus:outline-none border border-texto-oscuro/10 focus:border-texto-oscuro/30 shadow-sm text-[15px] text-texto-oscuro"></textarea>
                 </div>
-
                 <button type="button" id="btn-guardar-edicion" onclick="guardarEdicion()" class="w-full bg-texto-oscuro text-tarjeta font-bold py-4 rounded-3xl shadow-md hover:bg-texto-oscuro/90 transition mt-6 text-lg">
                     Guardar Cambios
                 </button>
@@ -202,89 +178,72 @@
                 let res = await fetch(SCRIPT_URL);
                 datosGlobales = await res.json();
                 
-                let confirmados = datosGlobales.filter(i => i.estatus === 'Asiste');
+                // 🟢 BLINDAJE: Filtramos filas completamente en blanco
+                let confirmados = datosGlobales.filter(i => i.estatus === 'Asiste' && String(i.nombre || "").trim() !== "");
                 avataresAleatorios = [...confirmados].sort(() => 0.5 - Math.random()).slice(0, 3);
                 
                 renderizarPantalla();
             } catch (error) {
+                console.error(error);
                 document.getElementById('lista-invitados').innerHTML = '<p class="text-center text-sm text-alerta-roja font-bold py-10">Error de conexión. Intenta recargar.</p>';
             }
         }
 
-        // 🟢 NOTA: LÓGICA DE DESCARGA EXCEL (CSV COMPATIBLE CON EXCEL)
+        // DESCARGA EXCEL
         function descargarExcel() {
-            // Filtramos solo a los que asisten
-            let asisten = datosGlobales.filter(i => i.estatus === 'Asiste');
-            
-            if(asisten.length === 0) {
-                alert("No hay asistentes confirmados para descargar.");
-                return;
-            }
+            let asisten = datosGlobales.filter(i => i.estatus === 'Asiste' && String(i.nombre || "").trim() !== "");
+            if(asisten.length === 0) { alert("No hay asistentes confirmados."); return; }
 
-            // Añadimos el BOM (\uFEFF) para que Excel lea los acentos y ñ correctamente
-            let csvContent = "\uFEFF"; 
-            
-            // Cabeceras
-            csvContent += "Nombre del Titular,Lugares Reservados,Nombres de Acompanantes,Notas Adicionales\n";
-
+            let csvContent = "\uFEFFNombre del Titular,Lugares Reservados,Acompanantes,Notas\n";
             asisten.forEach(inv => {
-                let titular = `"${inv.nombre.replace(/"/g, '""')}"`;
+                let titular = `"${String(inv.nombre || "").replace(/"/g, '""')}"`;
                 let lugares = inv.totalPersonas;
-                
                 let acompanantesStr = "";
                 if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
                     acompanantesStr = inv.nombresAcompanantes.filter(n=>n).join(" | ");
                 } else if(inv.acompanantesNumero > 0) {
-                    acompanantesStr = `+${inv.acompanantesNumero} invitado(s) sin nombre`;
+                    acompanantesStr = `+${inv.acompanantesNumero} sin nombre`;
                 }
                 let acompanantes = `"${acompanantesStr.replace(/"/g, '""')}"`;
-                
-                let notas = `"${(inv.notas || "").replace(/"/g, '""')}"`;
-
-                // Construimos la fila
+                let notas = `"${String(inv.notas || "").replace(/"/g, '""')}"`;
                 csvContent += `${titular},${lugares},${acompanantes},${notas}\n`;
             });
 
-            // Crear y forzar descarga
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
-            a.href = url;
-            a.setAttribute("download", "Lista_Asistentes_XV_Hanna.csv");
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            let link = document.createElement("a");
+            if (link.download !== undefined) {
+                let url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "Asistentes_XV_Hanna.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
-        // 🟢 NOTA: LÓGICA DE PULL TO REFRESH
-        let startY = 0;
-        let currentY = 0;
-        let isPulling = false;
+        // PULL TO REFRESH
+        let startY = 0; let currentY = 0; let isPulling = false;
         const ptrIndicator = document.getElementById('pull-to-refresh');
         const ptrIcon = document.getElementById('ptr-icon');
         const ptrText = document.getElementById('ptr-text');
 
         document.addEventListener('touchstart', e => {
-            if (window.scrollY === 0) { // Solo si estamos hasta arriba
+            if (window.scrollY === 0) {
                 startY = e.touches[0].clientY;
                 isPulling = true;
                 ptrIcon.style.transform = 'rotate(0deg)';
                 ptrText.innerText = "Desliza para actualizar...";
             }
         });
-
         document.addEventListener('touchmove', e => {
             if (!isPulling) return;
             currentY = e.touches[0].clientY;
             let pullDistance = currentY - startY;
-            
             if (pullDistance > 0) {
-                // Prevenir comportamiento por defecto para que no interfiera el pull del navegador
                 if(e.cancelable) e.preventDefault(); 
-                
-                let alturaVisible = Math.min(pullDistance / 2, 70); // Ralentiza el tirón
+                let alturaVisible = Math.min(pullDistance / 2, 70); 
                 ptrIndicator.style.height = alturaVisible + 'px';
-                
                 if (alturaVisible >= 60) {
                     ptrIcon.style.transform = 'rotate(180deg)';
                     ptrText.innerText = "Suelta para actualizar";
@@ -294,19 +253,15 @@
                 }
             }
         }, { passive: false });
-
         document.addEventListener('touchend', e => {
             if (!isPulling) return;
             isPulling = false;
             let pullDistance = currentY - startY;
-            
             if (pullDistance / 2 >= 60) {
-                // Accionamos la recarga
                 ptrIndicator.style.height = '50px';
-                ptrIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>'; // Cambia a icono refresh
+                ptrIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>'; 
                 ptrIcon.classList.add('animate-spin');
                 ptrText.innerText = "Actualizando...";
-                
                 cargarDatos().then(() => {
                     setTimeout(() => {
                         ptrIndicator.style.height = '0px';
@@ -314,17 +269,13 @@
                             ptrIcon.classList.remove('animate-spin');
                             ptrIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>';
                         }, 200);
-                    }, 500); // Pequeña pausa para que el usuario vea que terminó
+                    }, 500); 
                 });
-            } else {
-                // Cancelamos
-                ptrIndicator.style.height = '0px';
-            }
-            startY = 0;
-            currentY = 0;
+            } else { ptrIndicator.style.height = '0px'; }
+            startY = 0; currentY = 0;
         });
 
-        // Funciones estándar
+        // FUNCIONES DE UI
         function manejarBusqueda() {
             let input = document.getElementById('buscador').value;
             let btnX = document.getElementById('btn-borrar-busqueda');
@@ -360,7 +311,6 @@
         function toggleDetalles(fila) {
             const contenedor = document.getElementById(`detalles-${fila}`);
             const flecha = document.getElementById(`flecha-${fila}`);
-            
             if (contenedor.style.maxHeight && contenedor.style.maxHeight !== '0px') {
                 contenedor.style.maxHeight = '0px';
                 contenedor.style.opacity = '0';
@@ -383,16 +333,20 @@
             let totalPersonasAsisten = 0;
             let totalCancelados = 0;
 
-            datosGlobales.forEach(inv => {
+            // Filtramos las filas vacías que Google Sheets pudiera enviar
+            let datosValidos = datosGlobales.filter(inv => String(inv.nombre || "").trim() !== "");
+
+            datosValidos.forEach(inv => {
                 if (inv.estatus === 'Asiste') totalPersonasAsisten += inv.totalPersonas;
                 else totalCancelados += 1;
             });
 
+            // Avatares
             let avataresHTML = '';
             if(avataresAleatorios.length > 0) {
                 let zIndexes = ['z-30', 'z-20', 'z-10'];
                 avataresAleatorios.forEach((inv, i) => {
-                    let inicial = inv.nombre.substring(0,1).toUpperCase();
+                    let inicial = String(inv.nombre || " ").substring(0,1).toUpperCase();
                     let colorTarjeta = TONOS_ROSA[i % TONOS_ROSA.length];
                     avataresHTML += `
                         <div class="w-8 h-8 rounded-full border-[3px] border-tarjeta-fuerte ${colorTarjeta} flex items-center justify-center text-[11px] font-bold text-texto-oscuro shadow-sm relative ${zIndexes[i]}">
@@ -400,7 +354,6 @@
                         </div>
                     `;
                 });
-                
                 if(totalPersonasAsisten > avataresAleatorios.length) {
                     let extras = totalPersonasAsisten - avataresAleatorios.length;
                     avataresHTML += `
@@ -413,17 +366,27 @@
             }
             document.getElementById('avatares-confirmados').innerHTML = avataresHTML;
 
-            let datosFiltrados = datosGlobales.filter(inv => {
-                let coincideTitular = inv.nombre.toLowerCase().includes(terminoBusqueda);
-                let coincideAcompanante = inv.nombresAcompanantes ? inv.nombresAcompanantes.some(nom => nom && nom.toLowerCase().includes(terminoBusqueda)) : false;
+            // 🟢 BLINDAJE EN LA BÚSQUEDA MATEMÁTICA PARA EVITAR ERRORES
+            let datosFiltrados = datosValidos.filter(inv => {
+                let nombreLimpio = String(inv.nombre || "").toLowerCase();
+                let coincideTitular = nombreLimpio.includes(terminoBusqueda);
+                let coincideAcompanante = false;
+                
+                if (inv.nombresAcompanantes && Array.isArray(inv.nombresAcompanantes)) {
+                    coincideAcompanante = inv.nombresAcompanantes.some(nom => String(nom || "").toLowerCase().includes(terminoBusqueda));
+                }
                 return coincideTitular || coincideAcompanante;
             });
 
             if (filtroEstatus !== 'Todos') datosFiltrados = datosFiltrados.filter(inv => inv.estatus === filtroEstatus);
 
-            if (ordenActual === 'alfabetico') datosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
-            else datosFiltrados.sort((a, b) => a.fila - b.fila);
+            if (ordenActual === 'alfabetico') {
+                datosFiltrados.sort((a, b) => String(a.nombre || "").localeCompare(String(b.nombre || ""), 'es', { sensitivity: 'base' }));
+            } else {
+                datosFiltrados.sort((a, b) => a.fila - b.fila);
+            }
 
+            // Cambios visuales de Tarjetas
             const cardAsiste = document.getElementById('card-asiste');
             const cardNoAsiste = document.getElementById('card-no-asiste');
             const badgeAsiste = document.getElementById('badge-asiste');
@@ -442,7 +405,6 @@
                 cardNoAsiste.classList.remove('ring-4', 'ring-white/60');
                 badgeNoAsiste.classList.add('hidden');
                 flechaNoAsiste.classList.remove('hidden');
-                
                 tituloLista.innerText = "Confirmados (Sí Asisten)";
             } else if (filtroEstatus === 'No Asiste') {
                 cardNoAsiste.classList.add('ring-4', 'ring-white/60');
@@ -454,7 +416,6 @@
                 cardAsiste.classList.remove('ring-4', 'ring-white/60');
                 badgeAsiste.classList.add('hidden');
                 flechaAsiste.classList.remove('hidden');
-                
                 tituloLista.innerText = "Cancelados (No Asistirán)";
             } else {
                 cardAsiste.classList.remove('opacity-50', 'scale-[0.98]', 'ring-4', 'ring-white/60');
@@ -463,16 +424,15 @@
                 badgeNoAsiste.classList.add('hidden');
                 flechaAsiste.classList.remove('hidden');
                 flechaNoAsiste.classList.remove('hidden');
-                
                 tituloLista.innerText = "Registro de Invitados";
             }
 
             datosFiltrados.forEach(inv => {
                 let asiste = inv.estatus === 'Asiste';
-                let inicial = inv.nombre.substring(0,1).toUpperCase();
+                let inicial = String(inv.nombre || " ").substring(0,1).toUpperCase();
                 
-                let bgIconoStatus = asiste ? 'bg-tarjeta-fuerte' : 'bg-alerta-roja';
-                let colorIconoStatus = 'text-texto-oscuro';
+                let bgIconoStatus = 'bg-texto-oscuro/90';
+                let colorIconoStatus = asiste ? 'text-tarjeta-fuerte' : 'text-alerta-roja';
                 let svgStatus = asiste 
                     ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>' 
                     : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M6 18L18 6M6 6l12 12"></path>';
@@ -483,8 +443,9 @@
                 let listaAcompHTML = '';
                 if(inv.nombresAcompanantes && inv.nombresAcompanantes.length > 0) {
                     inv.nombresAcompanantes.forEach(nom => {
-                        let resaltado = (terminoBusqueda !== "" && nom.toLowerCase().includes(terminoBusqueda)) ? 'bg-white px-2 py-0.5 rounded-md shadow-sm' : '';
-                        listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro"><span class="${resaltado}">• ${nom}</span></li>`;
+                        let nomLimpio = String(nom || "");
+                        let resaltado = (terminoBusqueda !== "" && nomLimpio.toLowerCase().includes(terminoBusqueda)) ? 'bg-white px-2 py-0.5 rounded-md shadow-sm' : '';
+                        listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro"><span class="${resaltado}">• ${nomLimpio}</span></li>`;
                     });
                 } else if(inv.acompanantesNumero > 0) {
                     listaAcompHTML += `<li class="ml-4 mb-1 text-[13px] opacity-80 font-medium text-texto-oscuro">• ${inv.acompanantesNumero} acompañante(s) sin nombre</li>`;
@@ -493,13 +454,13 @@
                 }
 
                 let notasHTML = '';
-                if(inv.notas && inv.notas.trim() !== '') {
-                    notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1"><p class="text-[13px] italic text-texto-oscuro/80">"${inv.notas}"</p></div>`;
+                let notaTexto = String(inv.notas || "").trim();
+                if(notaTexto !== '') {
+                    notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1"><p class="text-[13px] italic text-texto-oscuro/80">"${notaTexto}"</p></div>`;
                 }
 
                 listaHTML += `
                     <div class="bg-tarjeta rounded-[45px] shadow-sm border border-white/60 p-4 transition-all duration-300 ${opacidadGeneral}">
-                        
                         <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetalles(${inv.fila})">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-full ${bgAvatar} flex items-center justify-center shadow-inner border border-white/80 flex-shrink-0">
@@ -510,7 +471,6 @@
                                     <p class="text-[12px] text-texto-oscuro/60 font-semibold mt-0.5">${inv.totalPersonas} Persona(s)</p>
                                 </div>
                             </div>
-                            
                             <div class="flex items-center gap-3 mr-2">
                                 <div class="w-7 h-7 rounded-full ${bgIconoStatus} flex items-center justify-center shadow-md border border-white/20">
                                     <svg class="w-4 h-4 ${colorIconoStatus}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${svgStatus}</svg>
@@ -518,29 +478,22 @@
                                 <svg id="flecha-${inv.fila}" class="w-5 h-5 text-texto-oscuro/40 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
-
                         <div id="detalles-${inv.fila}" class="hidden expand-transition mt-4" style="max-height: 0px; opacity: 0;">
                             <div class="pt-4 border-t border-texto-oscuro/5 mx-2">
                                 <p class="text-[10px] font-bold tracking-widest text-texto-oscuro/60 mb-2 uppercase ml-1">Detalles:</p>
-                                <ul class="mb-4">
-                                    ${listaAcompHTML}
-                                </ul>
+                                <ul class="mb-4">${listaAcompHTML}</ul>
                                 ${notasHTML}
-                                
                                 <button onclick="abrirModal(${inv.fila})" class="w-full bg-fondo-app border border-white text-texto-oscuro font-bold py-3.5 rounded-[25px] shadow-sm flex justify-center items-center gap-2 hover:bg-white transition text-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     Editar Registro
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 `;
             });
 
-            if (datosFiltrados.length === 0) {
-                listaHTML = '<p class="text-center text-sm opacity-60 py-10 font-bold">No se encontraron invitados.</p>';
-            }
+            if (datosFiltrados.length === 0) listaHTML = '<p class="text-center text-sm opacity-60 py-10 font-bold">No se encontraron invitados.</p>';
 
             document.getElementById('lista-invitados').innerHTML = listaHTML;
             document.getElementById('stat-total-personas').innerText = totalPersonasAsisten;
@@ -548,52 +501,38 @@
             document.getElementById('contador-resultados').innerText = `${datosFiltrados.length} encontrados`;
         }
 
+        // LÓGICA DE EDICIÓN ...
         function abrirModal(fila) {
             let inv = datosGlobales.find(i => i.fila === fila);
             if (!inv) return;
-
             document.getElementById('edit-fila').value = inv.fila;
             document.getElementById('edit-nombre').value = inv.nombre;
             document.getElementById('edit-estatus').value = inv.estatus || 'Asiste';
             document.getElementById('edit-acompanantes').value = inv.acompanantesNumero || 0;
             document.getElementById('edit-notas').value = inv.notas || '';
-
             window.nombresTemp = inv.nombresAcompanantes || [];
             generarCamposAcompanantes();
-
             document.getElementById('modal-editar').classList.remove('hidden');
         }
 
-        function cerrarModal() {
-            document.getElementById('modal-editar').classList.add('hidden');
-        }
+        function cerrarModal() { document.getElementById('modal-editar').classList.add('hidden'); }
 
         function generarCamposAcompanantes() {
             let num = parseInt(document.getElementById('edit-acompanantes').value) || 0;
             let contenedor = document.getElementById('edit-nombres-acompanantes');
             contenedor.innerHTML = '';
-
             if (num > 0) {
                 contenedor.classList.remove('hidden');
                 for (let i = 1; i <= num; i++) {
                     let valorPrevio = window.nombresTemp[i-1] || '';
-                    contenedor.innerHTML += `
-                        <div class="mb-2">
-                            <label class="block text-[9px] font-bold opacity-60 ml-1 mb-1 uppercase">ACOMPAÑANTE ${i}</label>
-                            <input type="text" id="edit-c${i}" value="${valorPrevio}" class="w-full bg-white rounded-xl p-3 focus:outline-none text-sm border border-white/50 focus:border-texto-oscuro/20 shadow-sm" placeholder="Nombre completo...">
-                        </div>
-                    `;
+                    contenedor.innerHTML += `<div class="mb-2"><label class="block text-[9px] font-bold opacity-60 ml-1 mb-1 uppercase">ACOMPAÑANTE ${i}</label><input type="text" id="edit-c${i}" value="${valorPrevio}" class="w-full bg-white rounded-xl p-3 focus:outline-none text-sm border border-white/50 focus:border-texto-oscuro/20 shadow-sm" placeholder="Nombre completo..."></div>`;
                 }
-            } else {
-                contenedor.classList.add('hidden');
-            }
+            } else { contenedor.classList.add('hidden'); }
         }
 
         function guardarEdicion() {
             const btn = document.getElementById('btn-guardar-edicion');
-            btn.innerText = "Guardando...";
-            btn.classList.add("opacity-50");
-            btn.disabled = true;
+            btn.innerText = "Guardando..."; btn.classList.add("opacity-50"); btn.disabled = true;
 
             let formData = new FormData();
             formData.append("action", "editar");
@@ -604,24 +543,12 @@
             
             let numAcomp = document.getElementById('edit-acompanantes').value;
             formData.append("acompanantes", numAcomp);
-            
-            for(let i=1; i<=numAcomp; i++) {
-                let nombreAcomp = document.getElementById(`edit-c${i}`).value;
-                formData.append(`c${i}`, nombreAcomp);
-            }
+            for(let i=1; i<=numAcomp; i++) formData.append(`c${i}`, document.getElementById(`edit-c${i}`).value);
 
             fetch(SCRIPT_URL, { method: 'POST', body: formData })
-            .then(res => res.text())
-            .then(texto => {
-                cerrarModal();
-                cargarDatos(); 
-            })
+            .then(res => res.text()).then(texto => { cerrarModal(); cargarDatos(); })
             .catch(error => alert("Error al guardar. Revisa tu internet."))
-            .finally(() => {
-                btn.innerText = "Guardar Cambios";
-                btn.classList.remove("opacity-50");
-                btn.disabled = false;
-            });
+            .finally(() => { btn.innerText = "Guardar Cambios"; btn.classList.remove("opacity-50"); btn.disabled = false; });
         }
 
         window.onload = cargarDatos;
