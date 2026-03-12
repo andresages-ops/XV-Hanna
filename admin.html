@@ -168,7 +168,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDAaQN5JrQp8-OS3SwbuhgP8PSZ4v0p8CsTHbWjeB65vdeSde0tCBy3adj9R6yffta/exec"; 
         
         let datosGlobales = []; 
-        let ordenActual = 'registro'; // Puede ser: 'registro', 'alfabetico', o 'duplicados'
+        let ordenActual = 'registro'; 
         let filtroEstatus = 'Todos'; 
         let avataresAleatorios = []; 
         const TONOS_ROSA = ['bg-[#FDF7F4]','bg-[#F9E0E0]','bg-[#F2D6D6]','bg-[#F5CACA]','bg-[#EFC2C2]'];
@@ -275,7 +275,6 @@
             startY = 0; currentY = 0;
         });
 
-        // FUNCIONES DE UI
         function manejarBusqueda() {
             let input = document.getElementById('buscador').value;
             let btnX = document.getElementById('btn-borrar-busqueda');
@@ -333,6 +332,45 @@
             return String(texto || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
 
+        // 🟢 NOTA: LA REGLA DEL PRIMER NOMBRE PARA EVITAR FALSOS POSITIVOS CON HERMANOS
+        function nombresSimilares(n1, n2) {
+            if(n1 === n2) return true;
+            
+            // Separamos por palabras (ignorando "de", "la", etc.)
+            let w1 = n1.split(" ").filter(w => w.length > 2);
+            let w2 = n2.split(" ").filter(w => w.length > 2);
+            
+            if(w1.length === 0 || w2.length === 0) return false;
+
+            // Extraemos el primer nombre de cada persona
+            let primerNombre1 = w1[0];
+            let primerNombre2 = w2[0];
+
+            // Revisamos si el primer nombre de uno aparece en algún lugar del otro
+            let p1EnP2 = w2.some(w => w === primerNombre1 || primerNombre1.includes(w) || w.includes(primerNombre1));
+            let p2EnP1 = w1.some(w => w === primerNombre2 || primerNombre2.includes(w) || w.includes(primerNombre2));
+
+            // Si los primeros nombres son totalmente distintos (ej. Juan vs Luis), 
+            // no pueden ser la misma persona aunque los apellidos coincidan.
+            if (!p1EnP2 && !p2EnP1) {
+                return false; 
+            }
+            
+            // Si pasaron el candado del primer nombre, hacemos la comparación normal del 60%
+            let matches = 0;
+            w1.forEach(palabra1 => {
+                if(w2.some(palabra2 => palabra1 === palabra2 || palabra1.includes(palabra2) || palabra2.includes(palabra1))) {
+                    matches++;
+                }
+            });
+
+            let minWords = Math.min(w1.length, w2.length);
+            let maxWords = Math.max(w1.length, w2.length);
+            let coincidencia = matches / minWords;
+
+            return coincidencia >= 0.6 && (matches >= 2 || (maxWords === 1 && matches === 1));
+        }
+
         function renderizarPantalla() {
             let terminoBusqueda = document.getElementById('buscador').value.toLowerCase();
             let listaHTML = '';
@@ -342,17 +380,55 @@
 
             let datosValidos = datosGlobales.filter(inv => String(inv.nombre || "").trim() !== "");
 
+            let directorioGlobal = [];
+            datosValidos.forEach(inv => {
+                let titularNorm = normalizarTexto(inv.nombre);
+                if(titularNorm) directorioGlobal.push({ fila: inv.fila, nombreNorm: titularNorm, original: inv.nombre });
+                
+                if(inv.nombresAcompanantes) {
+                    inv.nombresAcompanantes.forEach(nom => {
+                        let acompNorm = normalizarTexto(nom);
+                        if(acompNorm) directorioGlobal.push({ fila: inv.fila, nombreNorm: acompNorm, original: nom });
+                    });
+                }
+            });
+
             datosValidos.forEach(inv => {
                 if (inv.estatus === 'Asiste') totalPersonasAsisten += inv.totalPersonas;
                 else totalCancelados += 1;
 
                 inv.tieneDuplicado = false;
+                inv.detalleDuplicado = [];
+
+                let misNombres = [];
                 let titularNorm = normalizarTexto(inv.nombre);
-                let acompNorms = (inv.nombresAcompanantes || []).map(normalizarTexto).filter(n => n !== "");
-                
-                if (acompNorms.includes(titularNorm)) inv.tieneDuplicado = true;
-                let setAcomp = new Set(acompNorms);
-                if (setAcomp.size < acompNorms.length) inv.tieneDuplicado = true;
+                if(titularNorm) misNombres.push({norm: titularNorm, orig: inv.nombre});
+
+                if (inv.nombresAcompanantes) {
+                    inv.nombresAcompanantes.forEach(n => {
+                        let norm = normalizarTexto(n);
+                        if(norm) misNombres.push({norm: norm, orig: n});
+                    });
+                }
+
+                let norms = misNombres.map(n => n.norm);
+                let setInterno = new Set(norms);
+                if(setInterno.size < norms.length) {
+                    inv.tieneDuplicado = true;
+                    inv.detalleDuplicado.push("Alguien se registró dos veces en esta misma familia.");
+                }
+
+                misNombres.forEach(miN => {
+                    directorioGlobal.forEach(global => {
+                        if(global.fila !== inv.fila && nombresSimilares(miN.norm, global.nombreNorm)) {
+                            inv.tieneDuplicado = true;
+                            let msg = `Choca con: ${global.original}`;
+                            if(inv.detalleDuplicado.length < 3 && !inv.detalleDuplicado.includes(msg)) {
+                                inv.detalleDuplicado.push(msg);
+                            }
+                        }
+                    });
+                });
             });
 
             let avataresHTML = '';
@@ -392,15 +468,13 @@
 
             if (filtroEstatus !== 'Todos') datosFiltrados = datosFiltrados.filter(inv => inv.estatus === filtroEstatus);
 
-            // 🟢 NOTA: ORDEN INVERTIDO PARA REGISTROS RECIENTES (b.fila - a.fila)
             if (ordenActual === 'duplicados') {
                 datosFiltrados = datosFiltrados.filter(inv => inv.tieneDuplicado);
                 datosFiltrados.sort((a, b) => b.fila - a.fila);
             } else if (ordenActual === 'alfabetico') {
                 datosFiltrados.sort((a, b) => String(a.nombre || "").localeCompare(String(b.nombre || ""), 'es', { sensitivity: 'base' }));
             } else {
-                // ORDEN DE REGISTRO - Más recientes primero
-                datosFiltrados.sort((a, b) => b.fila - a.fila); 
+                datosFiltrados.sort((a, b) => b.fila - a.fila);
             }
 
             const cardAsiste = document.getElementById('card-asiste');
@@ -495,10 +569,11 @@
                     notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1 border border-white/50"><p class="text-[13px] italic text-texto-oscuro/80">"${notaTexto}"</p></div>`;
                 }
 
+                let textoAlerta = inv.detalleDuplicado.join(" | ");
                 let alertaHTML = inv.tieneDuplicado ? `
                     <div class="bg-advertencia/10 border border-advertencia/40 rounded-xl p-3 mb-3 mx-1 flex items-start gap-2">
                         <svg class="w-4 h-4 text-advertencia flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <p class="text-[11px] text-texto-oscuro/80 font-medium leading-tight"><strong>¡Atención!</strong> Detectamos nombres repetidos en este registro. Edítalo para corregir los nombres o liberar el lugar extra si fue un error.</p>
+                        <p class="text-[11px] text-texto-oscuro/80 font-medium leading-tight"><strong>¡Atención Duplicado!</strong><br>${textoAlerta}</p>
                     </div>
                 ` : '';
 
