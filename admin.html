@@ -189,7 +189,6 @@
             }
         }
 
-        // DESCARGA EXCEL
         function descargarExcel() {
             let asisten = datosGlobales.filter(i => i.estatus === 'Asiste' && String(i.nombre || "").trim() !== "");
             if(asisten.length === 0) { alert("No hay asistentes confirmados."); return; }
@@ -332,31 +331,22 @@
             return String(texto || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
 
-        // 🟢 NOTA: LA REGLA DEL PRIMER NOMBRE PARA EVITAR FALSOS POSITIVOS CON HERMANOS
         function nombresSimilares(n1, n2) {
             if(n1 === n2) return true;
             
-            // Separamos por palabras (ignorando "de", "la", etc.)
             let w1 = n1.split(" ").filter(w => w.length > 2);
             let w2 = n2.split(" ").filter(w => w.length > 2);
             
             if(w1.length === 0 || w2.length === 0) return false;
 
-            // Extraemos el primer nombre de cada persona
             let primerNombre1 = w1[0];
             let primerNombre2 = w2[0];
 
-            // Revisamos si el primer nombre de uno aparece en algún lugar del otro
             let p1EnP2 = w2.some(w => w === primerNombre1 || primerNombre1.includes(w) || w.includes(primerNombre1));
             let p2EnP1 = w1.some(w => w === primerNombre2 || primerNombre2.includes(w) || w.includes(primerNombre2));
 
-            // Si los primeros nombres son totalmente distintos (ej. Juan vs Luis), 
-            // no pueden ser la misma persona aunque los apellidos coincidan.
-            if (!p1EnP2 && !p2EnP1) {
-                return false; 
-            }
+            if (!p1EnP2 && !p2EnP1) return false; 
             
-            // Si pasaron el candado del primer nombre, hacemos la comparación normal del 60%
             let matches = 0;
             w1.forEach(palabra1 => {
                 if(w2.some(palabra2 => palabra1 === palabra2 || palabra1.includes(palabra2) || palabra2.includes(palabra1))) {
@@ -411,18 +401,26 @@
                     });
                 }
 
-                let norms = misNombres.map(n => n.norm);
-                let setInterno = new Set(norms);
-                if(setInterno.size < norms.length) {
-                    inv.tieneDuplicado = true;
-                    inv.detalleDuplicado.push("Alguien se registró dos veces en esta misma familia.");
+                // 🟢 NOTA: BÚSQUEDA INTERNA ARREGLADA (Usando Fuzzy Matching en lugar de Exacto)
+                for(let i = 0; i < misNombres.length; i++) {
+                    for(let j = i + 1; j < misNombres.length; j++) {
+                        if(nombresSimilares(misNombres[i].norm, misNombres[j].norm)) {
+                            inv.tieneDuplicado = true;
+                            // Identificamos quién es el que está duplicado
+                            let msg = `Duplicado en la misma familia: ${misNombres[i].orig}`;
+                            if(!inv.detalleDuplicado.includes(msg)) {
+                                inv.detalleDuplicado.push(msg);
+                            }
+                        }
+                    }
                 }
 
+                // BÚSQUEDA GLOBAL
                 misNombres.forEach(miN => {
                     directorioGlobal.forEach(global => {
                         if(global.fila !== inv.fila && nombresSimilares(miN.norm, global.nombreNorm)) {
                             inv.tieneDuplicado = true;
-                            let msg = `Choca con: ${global.original}`;
+                            let msg = `Choca con: ${global.original} (en otro registro)`;
                             if(inv.detalleDuplicado.length < 3 && !inv.detalleDuplicado.includes(msg)) {
                                 inv.detalleDuplicado.push(msg);
                             }
@@ -569,7 +567,7 @@
                     notasHTML = `<div class="bg-fondo-app rounded-[20px] p-3 mb-4 mx-1 border border-white/50"><p class="text-[13px] italic text-texto-oscuro/80">"${notaTexto}"</p></div>`;
                 }
 
-                let textoAlerta = inv.detalleDuplicado.join(" | ");
+                let textoAlerta = inv.detalleDuplicado.join(" <br> ");
                 let alertaHTML = inv.tieneDuplicado ? `
                     <div class="bg-advertencia/10 border border-advertencia/40 rounded-xl p-3 mb-3 mx-1 flex items-start gap-2">
                         <svg class="w-4 h-4 text-advertencia flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
